@@ -1,0 +1,968 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  width: 620px;
+  height: 600px;
+}
+
+/* ========== WebTUI Core Variables ========== */
+:root {
+  --webtui-bg: #0F1419;
+  /* Terminal background */
+  --webtui-panel: #141D2B;
+  /* Panel background */
+  --webtui-accent: #B4FF39;
+  /* Terminal green - higher contrast */
+  --webtui-text: #FFFFFF;
+  /* Terminal text - pure white for better contrast */
+  --webtui-text-dim: #8892B0;
+  /* Dimmed text - higher contrast */
+  --webtui-border: #4A5568;
+  /* Border color - higher contrast */
+  --webtui-border-focus: #718096;
+  /* Focus border - higher contrast */
+  --webtui-success: #68D391;
+  /* Success color - higher contrast */
+  --webtui-warning: #F6E05E;
+  /* Warning color - higher contrast */
+  --webtui-error: #FC8181;
+  /* Error color - higher contrast */
+  --webtui-info: #63B3ED;
+  /* Info color - higher contrast */
+
+  /* Terminal window colors */
+  --webtui-header-bg: #1A202C;
+  /* Dracula header - higher contrast */
+  --webtui-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+
+  /* Button variants */
+  --webtui-btn-primary: var(--webtui-accent);
+  --webtui-btn-secondary: #D6BCFA;
+  --webtui-btn-warning: #FBD38D;
+  --webtui-btn-info: #90CDF4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ========== WebTUI Terminal Body ========== */
+.webtui-terminal {
+  background: linear-gradient(135deg, var(--webtui-bg) 0%, #0F1419 100%);
+  color: var(--webtui-accent);
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0;
+  padding: 8px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== WebTUI Window ========== */
+.webtui-window {
+  background: var(--webtui-panel);
+  border-radius: 8px;
+  box-shadow: var(--webtui-shadow);
+  overflow: hidden;
+  width: 650px !important;
+  height: 700px !important;
+  max-width: calc(100vw - 20px);
+  max-height: calc(100vh - 20px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.webtui-popup {
+  /* Optimized dimensions for extension popup */
+  width: 600px !important;
+  height: 700px !important;
+  min-width: 600px !important;
+  min-height: 666px !important;
+}
+
+/* ========== WebTUI Header ========== */
+.webtui-header {
+  background: var(--webtui-header-bg);
+  border-bottom: 1px solid var(--webtui-border);
+}
+
+.webtui-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: linear-gradient(90deg, #282A36 0%, #44475A 100%);
+  border-bottom: 1px solid var(--webtui-border);
+}
+
+.webtui-title {
+  color: var(--webtui-accent);
+  font-size: 0.9em;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 8px var(--webtui-accent);
+}
+
+/* ========== WebTUI Content ========== */
+.webtui-content {
+  padding: 16px;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== WebTUI Status and Filters Row ========== */
+.webtui-status-filters-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.webtui-status-filters-row .webtui-status-panel,
+.webtui-status-filters-row .webtui-filter-panel {
+  flex: 1;
+  min-width: 250px;
+}
+
+/* On smaller screens, stack vertically */
+@media (max-width: 480px) {
+  .webtui-status-filters-row {
+    flex-direction: column;
+  }
+
+  .webtui-status-filters-row .webtui-status-panel,
+  .webtui-status-filters-row .webtui-filter-panel {
+    min-width: unset;
+  }
+}
+
+/* ========== WebTUI Panels ========== */
+.webtui-panel {
+  border: 1px solid var(--webtui-border);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+
+.webtui-panel:last-child {
+  margin-bottom: 0;
+}
+
+.webtui-panel-header {
+  background: linear-gradient(90deg, var(--webtui-panel) 0%, rgba(0, 0, 0, 0.2) 100%);
+  padding: 8px 12px;
+  color: var(--webtui-accent);
+  font-weight: 600;
+  font-size: 0.9em;
+  border-bottom: 1px solid var(--webtui-border);
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.webtui-panel-title {
+  flex: 1;
+}
+
+.webtui-subtitle-actions {
+  flex-shrink: 0;
+}
+
+.webtui-panel-header::before {
+  content: "┌─ ";
+  color: var(--webtui-text-dim);
+  font-size: 0.8em;
+}
+
+.webtui-panel-header::after {
+  content: " ─┐";
+  color: var(--webtui-text-dim);
+  font-size: 0.8em;
+}
+
+.webtui-panel-content {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.webtui-debug-panel .webtui-panel-content div {
+  margin-bottom: 4px;
+  color: var(--webtui-text-dim);
+}
+
+.webtui-debug-panel .webtui-panel-content div:last-child {
+  margin-bottom: 0;
+}
+
+/* ========== WebTUI Panel Footer ========== */
+.webtui-panel-footer {
+  border-top: 1px solid var(--webtui-border);
+  background: rgba(0, 0, 0, 0.1);
+  padding: 8px 12px;
+}
+
+.webtui-action-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ========== WebTUI Subtitle Panel ========== */
+/* Always maintain consistent panel structure with fixed height */
+.webtui-subtitle-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.webtui-subtitle-panel .webtui-panel-content {
+  min-height: 100px;
+  max-height: 100px;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  line-height: 1.4;
+  resize: none;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== WebTUI Bulk Actions Panel ========== */
+.webtui-bulk-actions-panel .webtui-panel-content {
+  padding: 12px;
+}
+
+/* ========== WebTUI Unified Status Panel ========== */
+.webtui-status-panel .webtui-panel-content {
+  padding: 8px 12px;
+}
+
+.webtui-status-stats-row,
+.webtui-status-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.webtui-stat-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+}
+
+.webtui-stat-label {
+  font-size: 0.8em;
+  color: var(--webtui-text-dim);
+  margin-right: 4px;
+  font-weight: 500;
+}
+
+.webtui-stat-value {
+  font-size: 1.1em;
+  color: var(--webtui-accent);
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.webtui-current-status {
+  text-align: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--webtui-border);
+}
+
+/* Loading states */
+.webtui-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.webtui-loading::after {
+  content: ' ⏳';
+  animation: webtui-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes webtui-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ========== Download Progress ========== */
+.webtui-download-progress {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--webtui-panel);
+  border: 1px solid var(--webtui-border);
+  border-radius: 4px;
+}
+
+.webtui-progress-item {
+  margin-bottom: 6px;
+}
+
+.webtui-progress-item:last-child {
+  margin-bottom: 0;
+}
+
+.webtui-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--webtui-bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.webtui-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--webtui-accent) 0%, #50FA7B 100%);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.webtui-progress-text {
+  font-size: 0.8em;
+  color: var(--webtui-text-dim);
+  margin-bottom: 2px;
+}
+
+.webtui-progress-status {
+  font-size: 0.75em;
+  color: var(--webtui-accent);
+  font-weight: 500;
+}
+
+/* ========== WebTUI Filter Panel ========== */
+.webtui-filter-panel .webtui-panel-content {
+  padding: 12px;
+}
+
+.webtui-filter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.webtui-filter-row:last-child {
+  margin-bottom: 0;
+}
+
+.webtui-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.webtui-filter-label {
+  font-size: 0.85em;
+  color: var(--webtui-text-dim);
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.webtui-checkbox-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.webtui-checkbox-group .webtui-checkbox-label {
+  font-size: 0.8em;
+  width: 32px;
+  height: 24px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  min-width: 32px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.webtui-status-text {
+  font-size: 0.9em;
+  color: var(--webtui-text);
+  font-weight: 500;
+}
+
+/* ========== WebTUI Bulk Actions Layout ========== */
+.webtui-bulk-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.webtui-format-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.webtui-action-controls {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.webtui-selection-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.webtui-filename-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--webtui-border);
+  border-bottom: 1px solid var(--webtui-border);
+  flex-wrap: nowrap;
+}
+
+.webtui-filename-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 2;
+  min-width: 150px;
+}
+
+.webtui-language-append {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  flex-shrink: 0;
+  min-width: 140px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.webtui-language-append-text {
+  color: var(--webtui-text);
+  font-size: 0.85em;
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+}
+
+.webtui-language-append:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.webtui-input {
+  background: var(--webtui-bg);
+  border: 1px solid var(--webtui-border);
+  border-radius: 3px;
+  color: var(--webtui-text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  padding: 4px 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.webtui-input:focus {
+  outline: none;
+  border-color: var(--webtui-border-focus);
+  box-shadow: 0 0 0 2px rgba(159, 239, 0, 0.2);
+}
+
+.webtui-input:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--webtui-text-dim);
+  cursor: not-allowed;
+}
+
+
+
+.webtui-label {
+  color: var(--webtui-accent);
+  font-size: 0.85em;
+  font-weight: 600;
+  min-width: 50px;
+}
+
+/* WebTUI Scrollbar Styling */
+.webtui-subtitle-panel .webtui-panel-content::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+.webtui-subtitle-panel .webtui-panel-content::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, rgba(40, 42, 54, 0.6), rgba(68, 71, 90, 0.6));
+  border-radius: 6px;
+}
+
+.webtui-subtitle-panel .webtui-panel-content::-webkit-scrollbar-thumb {
+  background-color: var(--webtui-accent);
+  border-radius: 6px;
+  border: 3px solid var(--webtui-panel);
+  box-shadow: 0 0 4px rgba(159, 239, 0, 0.5);
+}
+
+.webtui-subtitle-panel .webtui-panel-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--webtui-success);
+}
+
+/* Firefox scrollbar */
+.webtui-subtitle-panel .webtui-panel-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--webtui-accent) var(--webtui-panel);
+}
+
+.webtui-subtitle-panel .webtui-panel-content:hover {
+  scrollbar-color: var(--webtui-success) var(--webtui-panel);
+}
+
+/* ========== WebTUI Text Elements ========== */
+.webtui-text {
+  color: var(--webtui-text);
+  margin-bottom: 8px;
+}
+
+.webtui-empty-state {
+  color: var(--webtui-text-dim);
+  font-size: 0.85em;
+  text-align: center;
+  padding: 20px;
+  border: 1px dashed var(--webtui-border);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ========== WebTUI Subtitle Items ========== */
+.webtui-subtitle-item {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px 14px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  border-left: 3px solid var(--webtui-accent);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.2s;
+}
+
+.webtui-subtitle-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.webtui-subtitle-item.selected {
+  background: rgba(159, 239, 0, 0.1);
+  border-left-color: var(--webtui-success);
+}
+
+/* ========== WebTUI Checkboxes ========== */
+.webtui-subtitle-selection {
+  flex-shrink: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.webtui-checkbox {
+  display: none;
+}
+
+.webtui-checkbox-label {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--webtui-border);
+  border-radius: 3px;
+  background: var(--webtui-panel);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.webtui-checkbox-label:hover {
+  border-color: var(--webtui-accent);
+}
+
+/* Filter checkboxes: glowing border */
+.webtui-checkbox[data-lang]:checked+.webtui-checkbox-label,
+.webtui-checkbox[data-format]:checked+.webtui-checkbox-label {
+  border: 2px solid var(--webtui-accent);
+  box-shadow: 0 0 8px var(--webtui-accent), 0 0 16px var(--webtui-accent);
+  background: transparent;
+  color: var(--webtui-text);
+}
+
+/* Subtitle checkboxes: checkmark */
+.webtui-checkbox[data-subtitle-id]:checked+.webtui-checkbox-label {
+  background: var(--webtui-accent);
+  border-color: var(--webtui-accent);
+}
+
+.webtui-checkbox[data-subtitle-id]:checked+.webtui-checkbox-label::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--webtui-bg);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Append language checkbox: checkmark and larger size */
+#bulk-append-language+.webtui-checkbox-label {
+  width: 18px;
+  height: 18px;
+  transition: all 0.2s ease;
+}
+
+#bulk-append-language+.webtui-checkbox-label.checked {
+  background: var(--webtui-accent);
+  border-color: var(--webtui-accent);
+}
+
+#bulk-append-language+.webtui-checkbox-label.checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--webtui-bg);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+#bulk-append-language+.webtui-checkbox-label:not(.checked) {
+  background: var(--webtui-panel);
+  border-color: var(--webtui-border);
+}
+
+/* ========== WebTUI Subtitle Info ========== */
+.webtui-subtitle-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.webtui-subtitle-language {
+  font-weight: 600;
+  color: var(--webtui-accent);
+  font-size: 0.85em;
+  margin-bottom: 2px;
+}
+
+.webtui-subtitle-url {
+  font-size: 0.75em;
+  color: var(--webtui-text-dim);
+  word-break: break-all;
+  line-height: 1.2;
+}
+
+.webtui-subtitle-item:last-child {
+  margin-bottom: 0;
+}
+
+.webtui-checkbox {
+  accent-color: var(--webtui-accent);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+
+
+.webtui-subtitle-url {
+  word-break: break-all;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ========== WebTUI Button Rows ========== */
+.webtui-button-row {
+  display: flex;
+  flex-direction: row !important;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.webtui-button-row:last-child {
+  margin-bottom: 0;
+}
+
+.webtui-button-row-centered {
+  justify-content: center;
+}
+
+.webtui-button-row-centered .webtui-button {
+  min-width: 120px;
+  max-width: 200px;
+  font-weight: 600;
+}
+
+/* ========== WebTUI Buttons ========== */
+.webtui-button {
+  background: var(--webtui-panel);
+  color: var(--webtui-text);
+  border: 1px solid var(--webtui-border);
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75em;
+  font-weight: 500;
+  padding: 4px 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+   min-width: 90px;
+   max-width: 200px;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   position: relative;
+   flex: 1;
+}
+
+.webtui-button-icon {
+  font-size: 1em;
+  line-height: 1;
+}
+
+/* Button Variants */
+.webtui-primary {
+  border-color: var(--webtui-btn-primary);
+  color: var(--webtui-btn-primary);
+  background: rgba(159, 239, 0, 0.1);
+  font-weight: 600;
+}
+
+.webtui-primary:hover {
+  background: var(--webtui-btn-primary);
+  color: var(--webtui-bg);
+  box-shadow: 0 0 12px var(--webtui-btn-primary);
+  transform: translateY(-1px);
+}
+
+#download-selected-btn {
+   font-weight: 700;
+   font-size: 0.8em;
+   padding: 6px 10px;
+   min-width: 140px;
+   max-width: 180px;
+   flex: 0 0 auto !important;
+}
+
+.webtui-secondary {
+  border-color: var(--webtui-btn-secondary);
+  color: var(--webtui-btn-secondary);
+}
+
+.webtui-secondary:hover {
+  background: var(--webtui-btn-secondary);
+  color: var(--webtui-bg);
+  box-shadow: 0 0 8px var(--webtui-btn-secondary);
+}
+
+.webtui-warning {
+  border-color: var(--webtui-btn-warning);
+  color: var(--webtui-btn-warning);
+}
+
+.webtui-warning:hover {
+  background: var(--webtui-btn-warning);
+  color: var(--webtui-bg);
+  box-shadow: 0 0 8px var(--webtui-btn-warning);
+}
+
+.webtui-info {
+  border-color: var(--webtui-btn-info);
+  color: var(--webtui-btn-info);
+}
+
+.webtui-info:hover {
+  background: var(--webtui-btn-info);
+  color: var(--webtui-bg);
+  box-shadow: 0 0 8px var(--webtui-btn-info);
+}
+
+/* Button States */
+.webtui-button:active {
+  transform: translateY(1px);
+}
+
+.webtui-button:focus {
+  outline: none;
+  border-color: var(--webtui-border-focus);
+  box-shadow: 0 0 4px var(--webtui-border-focus);
+}
+
+.webtui-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ========== WebTUI Select Dropdown ========== */
+.webtui-select {
+  background: var(--webtui-panel);
+  color: var(--webtui-text);
+  border: 1px solid var(--webtui-border);
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75em;
+  font-weight: 500;
+  padding: 4px 8px;
+  cursor: pointer;
+  min-width: 60px;
+  transition: all 0.2s ease;
+}
+
+.webtui-select:focus {
+  outline: none;
+  border-color: var(--webtui-border-focus);
+  box-shadow: 0 0 4px var(--webtui-border-focus);
+}
+
+.webtui-select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.webtui-select:hover:not(:disabled) {
+  border-color: var(--webtui-accent);
+}
+
+/* ========== WebTUI Status Message ========== */
+.webtui-status-message {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--webtui-text);
+  font-size: 0.85em;
+  border: 1px solid var(--webtui-border);
+  display: none;
+  /* shown when needed */
+  flex-shrink: 0;
+}
+
+/* ========== WebTUI Responsive Design ========== */
+@media (max-width: 520px) {
+  .webtui-terminal {
+    padding: 4px;
+  }
+
+  .webtui-window {
+    width: calc(100vw - 8px);
+    max-height: calc(100vh - 8px);
+    margin: 0;
+  }
+
+  .webtui-popup {
+    width: 100%;
+    min-width: 320px;
+  }
+
+  .webtui-content {
+    padding: 12px;
+  }
+
+
+
+  .webtui-bulk-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .webtui-action-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .webtui-button-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .webtui-button {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    justify-content: center;
+  }
+
+  .webtui-button-row-centered {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .webtui-terminal {
+    padding: 4px;
+  }
+
+  .webtui-content {
+    padding: 8px;
+  }
+
+  .webtui-title {
+    font-size: 0.85em;
+  }
+
+  .webtui-prompt {
+    font-size: 0.85em;
+    padding: 6px 10px;
+  }
+
+  .webtui-status-bar {
+    font-size: 0.8em;
+    padding: 3px 6px;
+  }
+
+  .webtui-panel-header {
+    font-size: 0.85em;
+    padding: 6px 10px;
+  }
+
+  .webtui-panel-content {
+    padding: 8px;
+  }
+
+  .webtui-button {
+    font-size: 0.8em;
+    padding: 8px 10px;
+  }
+}

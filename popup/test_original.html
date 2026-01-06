@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SubTX - Edge Subtitle Extractor</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body class="webtui-terminal">
+  <div class="webtui-window webtui-popup" role="dialog" aria-labelledby="appTitle">
+    <!-- Terminal Header -->
+    <div class="webtui-header">
+      <div class="webtui-title-bar">
+        <span class="webtui-title" id="appTitle">SubTX v1.0.0</span>
+      </div>
+    </div>
+
+    <!-- Terminal Content -->
+    <div class="webtui-content">
+
+        <!-- Status and Filters Row -->
+        <div class="webtui-status-filters-row">
+          <!-- Unified Status Panel -->
+          <div class="webtui-panel webtui-status-panel">
+             <div class="webtui-panel-header">Status Info</div>
+            <div class="webtui-panel-content">
+              <!-- Row 1: System Stats -->
+              <div class="webtui-status-stats-row">
+                <div class="webtui-stat-item">
+                  <span class="webtui-stat-label">Requests intercepted:</span>
+                  <span id="debug-requests" class="webtui-stat-value">0</span>
+                </div>
+                 <div class="webtui-stat-item">
+                   <span class="webtui-stat-label">Subtitles found:</span>
+                   <span id="debug-subtitles" class="webtui-stat-value">0</span>
+                 </div>
+              </div>
+
+              <!-- Row 2: Current Status -->
+              <div class="webtui-status-info-row">
+                <div class="webtui-stat-item">
+                  <span class="webtui-stat-label">Subtitles listed:</span>
+                  <span id="subtitle-counter" class="webtui-stat-value">0</span>
+                </div>
+                <div class="webtui-stat-item">
+                  <span class="webtui-stat-label">Subtitles selected:</span>
+                  <span id="selected-count" class="webtui-stat-value">0</span>
+                </div>
+              </div>
+
+              <!-- Current Operation Status -->
+              <div class="webtui-current-status">
+                <span id="status" class="webtui-status-text">Ready</span>
+              </div>
+            </div>
+           </div>
+
+           <!-- Filter Area -->
+           <div class="webtui-panel webtui-filter-panel">
+          <div class="webtui-panel-header">Filters</div>
+          <div class="webtui-panel-content">
+            <!-- Language Filter -->
+            <div class="webtui-filter-row">
+              <div class="webtui-filter-group">
+                <label class="webtui-filter-label">Language:</label>
+                <div class="webtui-checkbox-group">
+                  <input type="checkbox" id="lang-en" class="webtui-checkbox" data-lang="en">
+                  <label for="lang-en" class="webtui-checkbox-label" title="English">en</label>
+                  <input type="checkbox" id="lang-es" class="webtui-checkbox" data-lang="es">
+                  <label for="lang-es" class="webtui-checkbox-label" title="Spanish">es</label>
+                  <input type="checkbox" id="lang-fr" class="webtui-checkbox" data-lang="fr">
+                  <label for="lang-fr" class="webtui-checkbox-label" title="French">fr</label>
+                  <input type="checkbox" id="lang-de" class="webtui-checkbox" data-lang="de">
+                  <label for="lang-de" class="webtui-checkbox-label" title="German">de</label>
+                  <input type="checkbox" id="lang-it" class="webtui-checkbox" data-lang="it">
+                  <label for="lang-it" class="webtui-checkbox-label" title="Italian">it</label>
+                  <input type="checkbox" id="lang-pt" class="webtui-checkbox" data-lang="pt">
+                  <label for="lang-pt" class="webtui-checkbox-label" title="Portuguese">pt</label>
+                  <input type="checkbox" id="lang-ru" class="webtui-checkbox" data-lang="ru">
+                  <label for="lang-ru" class="webtui-checkbox-label" title="Russian">ru</label>
+                  <input type="checkbox" id="lang-ar" class="webtui-checkbox" data-lang="ar">
+                  <label for="lang-ar" class="webtui-checkbox-label" title="Arabic">ar</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Extension Filter -->
+            <div class="webtui-filter-row">
+              <div class="webtui-filter-group">
+                <label class="webtui-filter-label">Format:</label>
+                <div class="webtui-checkbox-group">
+                  <input type="checkbox" id="format-vtt" class="webtui-checkbox" data-format="vtt">
+                  <label for="format-vtt" class="webtui-checkbox-label" title="WebVTT">VTT</label>
+                  <input type="checkbox" id="format-srt" class="webtui-checkbox" data-format="srt">
+                  <label for="format-srt" class="webtui-checkbox-label" title="SubRip">SRT</label>
+                  <input type="checkbox" id="format-txt" class="webtui-checkbox" data-format="txt">
+                  <label for="format-txt" class="webtui-checkbox-label" title="Plain Text">TXT</label>
+                </div>
+              </div>
+            </div>
+          </div>
+         </div>
+        </div>
+
+        <!-- Subtitle List Panel -->
+      <div class="webtui-panel webtui-subtitle-panel" id="subtitle-list" aria-label="Detected subtitles">
+        <div class="webtui-panel-header">Subtitle Results</div>
+        <div class="webtui-panel-content">
+          <div class="webtui-text">Scanning for subtitles...</div>
+        </div>
+      </div>
+
+        <!-- Bulk Actions Panel -->
+        <div class="webtui-panel webtui-bulk-actions-panel">
+          <div class="webtui-panel-header">Bulk Actions</div>
+          <div class="webtui-panel-content">
+            <!-- Row 1: Format, Download, Copy -->
+            <div class="webtui-bulk-actions-row">
+              <div class="webtui-format-control">
+                <label for="format-select" class="webtui-label">Format:</label>
+                <select id="format-select" class="webtui-select" disabled>
+                  <option value="vtt">VTT</option>
+                  <option value="srt">SRT</option>
+                  <option value="txt">TXT</option>
+                </select>
+              </div>
+              <div class="webtui-action-controls">
+                <button id="download-selected-btn" class="webtui-button webtui-primary" title="Download selected subtitles" disabled>
+                  <span class="webtui-button-icon">📥</span>
+                  Download Selected
+                </button>
+                <button id="copy-selected-btn" class="webtui-button webtui-secondary" title="Copy selected subtitle links" disabled>
+                  <span class="webtui-button-icon">📋</span>
+                  Copy Links
+                </button>
+              </div>
+            </div>
+
+             <!-- Row 2: Filename Options -->
+             <div class="webtui-filename-row">
+               <div class="webtui-filename-control">
+                 <label for="bulk-filename" class="webtui-label">Filename:</label>
+                 <input type="text" id="bulk-filename" class="webtui-input" placeholder="Enter filename" disabled>
+               </div>
+                <div class="webtui-language-append">
+                  <input type="checkbox" id="bulk-append-language" class="webtui-checkbox" checked disabled>
+                  <label for="bulk-append-language" class="webtui-checkbox-label"></label>
+                  <span class="webtui-language-append-text">Append Language</span>
+                </div>
+             </div>
+
+             <!-- Row 3: Select All Button -->
+             <div class="webtui-selection-row">
+               <button id="select-all-btn" class="webtui-button webtui-secondary" title="Select/deselect all subtitles">
+                 <span class="webtui-button-icon">☑️</span>
+                 Select All
+               </button>
+             </div>
+          </div>
+        </div>
+
+      <!-- Actions Panel -->
+      <div class="webtui-panel webtui-actions-panel">
+        <div class="webtui-panel-header">Actions</div>
+        <div class="webtui-panel-content">
+          <!-- Row 1: Primary Actions -->
+          <div class="webtui-button-row">
+            <button id="refresh-btn" class="webtui-button webtui-primary" title="Refresh subtitle detection">
+              <span class="webtui-button-icon">🔄</span>
+              Refresh
+            </button>
+            <button id="copy-all-btn" class="webtui-button webtui-secondary" title="Copy all subtitle links to clipboard">
+              <span class="webtui-button-icon">📋</span>
+              Copy All
+            </button>
+          </div>
+
+          <!-- Row 2: Secondary Actions -->
+          <div class="webtui-button-row">
+            <button id="settings-btn" class="webtui-button webtui-info" title="Extension settings">
+              <span class="webtui-button-icon">⚙️</span>
+              Settings
+            </button>
+            <button id="clear-cache-btn" class="webtui-button webtui-warning" title="Clear cached subtitle verifications">
+              <span class="webtui-button-icon">🗑️</span>
+              Clear Cache
+            </button>
+          </div>
+        </div>
+       </div>
+
+       <!-- Download Progress Area -->
+       <div id="download-progress" class="webtui-download-progress" style="display: none;">
+         <div class="webtui-panel-header">Download Progress</div>
+         <div id="progress-container" class="webtui-panel-content">
+           <!-- Progress items will be added here dynamically -->
+         </div>
+       </div>
+
+       <!-- Status Message Area -->
+       <div id="detailed-status" class="webtui-status-message" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script src="smart-language-detector.js"></script>
+  <script src="subtitle-converter.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

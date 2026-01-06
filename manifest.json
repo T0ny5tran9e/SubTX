@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "SubTX - Edge Subtitle Extractor",
+  "version": "1.0.0",
+  "description": "Extract and download subtitles from streaming platforms in Microsoft Edge",
+  "author": "SubTX Team",
+  "minimum_chrome_version": "88",
+  "permissions": [
+    "webRequest",
+    "activeTab",
+    "downloads",
+    "storage"
+  ],
+   "host_permissions": [
+     "<all_urls>"
+   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "SubTX - Subtitle Extractor"
+  },
+    "background": {
+      "service_worker": "background/background.js",
+      "type": "module"
+    },
+   "content_scripts": [
+     {
+       "matches": ["<all_urls>"],
+       "js": ["content/content.js"],
+       "run_at": "document_idle"
+     }
+   ]
+}
