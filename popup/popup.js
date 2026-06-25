@@ -123,6 +123,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (copyLinksBtn) copyLinksBtn.disabled = !hasSelection;
     if (bulkFilename) bulkFilename.disabled = !hasSelection;
     if (bulkAppendLang) bulkAppendLang.disabled = !hasSelection;
+
+    const hasSubtitles = filteredSubtitles.length > 0;
+    if (bulkFilename) {
+      bulkFilename.classList.toggle('controls-disabled', !hasSubtitles);
+    }
+    if (bulkAppendLang) {
+      bulkAppendLang.classList.toggle('controls-disabled', !hasSubtitles);
+    }
+
+    if (copyAllBtn) {
+      copyAllBtn.title = hasSubtitles
+        ? 'Copy All URLs (Ctrl+Shift+C)'
+        : 'Select subtitles first';
+    }
   }
 
   /**
@@ -149,6 +163,15 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFilteredCards();
     updateStats();
     return filteredSubtitles;
+  }
+
+  /**
+   * Reset all language/format filters to their default (all checked) state.
+   */
+  function resetAllFilters() {
+    langCheckboxes.forEach(cb => cb.checked = true);
+    formatCheckboxes.forEach(cb => cb.checked = true);
+    applyFilters();
   }
 
   // ===========================================================================
@@ -265,6 +288,21 @@ document.addEventListener('DOMContentLoaded', () => {
       emptyMsg.className = 'terminal-text-muted';
       emptyMsg.textContent = 'No subtitles match current filters.';
       subtitleList.appendChild(emptyMsg);
+
+      // Check if any filter checkbox is unchecked (filters are active)
+      const filtersActive = Array.from(langCheckboxes).some(cb => !cb.checked) ||
+                            Array.from(formatCheckboxes).some(cb => !cb.checked);
+      if (filtersActive) {
+        const resetLink = document.createElement('span');
+        resetLink.className = 'text-link';
+        resetLink.textContent = 'Reset Filters';
+        resetLink.tabIndex = 0;
+        resetLink.setAttribute('role', 'button');
+        resetLink.addEventListener('click', resetAllFilters);
+        subtitleList.appendChild(document.createTextNode(' '));
+        subtitleList.appendChild(resetLink);
+      }
+
       return;
     }
 
@@ -380,14 +418,21 @@ document.addEventListener('DOMContentLoaded', () => {
    * Download a single subtitle: fetch -> convert -> anchor download
    */
   function triggerDownload(content, filename) {
-    const dataUrl = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = filename;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    try {
+      statusText.textContent = 'Downloading...';
+      const dataUrl = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => { statusText.textContent = '\u2713 Done'; }, 200);
+    } catch (err) {
+      console.error('[SubTX] Download error:', err);
+      statusText.textContent = 'Error';
+    }
   }
 
   function handleDownload(url, format, index) {
@@ -719,8 +764,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Settings ---
   if (settingsBtn) {
     settingsBtn.addEventListener('click', () => {
-      if (chrome.runtime.openOptionsPage) {
-        chrome.runtime.openOptionsPage();
+      if (typeof chrome.runtime.openOptionsPage === 'function') {
+        try {
+          chrome.runtime.openOptionsPage();
+        } catch (_e) {
+          statusText.textContent = 'No options page available';
+        }
+      } else {
+        statusText.textContent = 'No options page available';
       }
     });
   }
@@ -728,6 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Clear Cache ---
   if (clearCacheBtn) {
     clearCacheBtn.addEventListener('click', () => {
+      if (!confirm('Clear all cached subtitle data and settings? This cannot be undone.')) return;
       chrome.storage.local.clear(() => {
         statusText.textContent = 'Cache cleared';
         setTimeout(() => maybeResetStatus(), 2000);

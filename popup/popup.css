@@ -473,6 +473,20 @@ body {
   padding: 12px 0;
 }
 
+/* Disabled control overlay for bulk inputs */
+.controls-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Clickable text link for filter reset */
+.text-link {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 /* --------------------------------------------------------------------------
    11. Bulk Actions Panel
    -------------------------------------------------------------------------- */
@@ -1013,7 +1027,6 @@ body {
 
 /* Fade in for panels */
 .terminal-panel {
-  animation: panel-fadein 200ms ease-out;
 }
 
 @keyframes panel-fadein {
