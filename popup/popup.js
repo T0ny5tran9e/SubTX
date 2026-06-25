@@ -50,6 +50,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const formatCheckboxes = document.querySelectorAll('#format-filters .terminal-checkbox');
 
   // ===========================================================================
+  // SVG Icons
+  // ===========================================================================
+  const ICONS = {
+    refresh: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/></svg>`,
+    copy: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>`,
+    copyAll: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>`,
+    selectAll: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+    deselectAll: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+    settings: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281zM15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`,
+    clear: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>`,
+    scan: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>`,
+  };
+
+  // ===========================================================================
   // State
   // ===========================================================================
   /** @type {Array<{language:string, url:string, format:string, confidence:number, source:string}>} */
@@ -327,37 +341,39 @@ document.addEventListener('DOMContentLoaded', () => {
    * @returns {Promise<string>} Subtitle text content
    */
   async function fetchSubtitleContent(url) {
-    if (!url.startsWith('blob:')) {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      return await response.text();
-    }
-
     const tabs = await new Promise(function (resolve) {
       chrome.tabs.query({ active: true, currentWindow: true }, function (t) {
         resolve(t);
       });
     });
     const tabId = tabs && tabs[0] ? tabs[0].id : null;
-    if (!tabId) throw new Error('No active tab');
 
-    return await new Promise(function (resolve, reject) {
-      chrome.tabs.sendMessage(tabId, { action: 'fetchSubtitleContent', url: url }, function (res) {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        if (res && res.error) {
-          reject(new Error(res.error));
-          return;
-        }
-        if (res && res.content) {
-          resolve(res.content);
-        } else {
-          reject(new Error('Empty response'));
-        }
-      });
-    });
+    if (tabId) {
+      try {
+        return await new Promise(function (resolve, reject) {
+          chrome.tabs.sendMessage(tabId, { action: 'fetchSubtitleContent', url: url }, function (res) {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+              return;
+            }
+            if (res && res.error) {
+              reject(new Error(res.error));
+              return;
+            }
+            if (res && res.content) {
+              resolve(res.content);
+            } else {
+              reject(new Error('Empty response'));
+            }
+          });
+        });
+      } catch (_msgErr) {
+      }
+    }
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return await response.text();
   }
 
   // ===========================================================================
@@ -365,8 +381,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===========================================================================
 
   /**
-   * Download a single subtitle: fetch -> convert -> blob -> chrome.downloads
+   * Download a single subtitle: fetch -> convert -> anchor download
    */
+  function triggerDownload(content, filename) {
+    const dataUrl = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
   function handleDownload(url, format, index) {
     if (isDownloading) return;
     if (!url) {
@@ -392,22 +419,10 @@ document.addEventListener('DOMContentLoaded', () => {
           converted = rawContent;
         }
 
-        const blob = new Blob([converted], { type: 'text/plain;charset=utf-8' });
-        const blobUrl = URL.createObjectURL(blob);
         const filename = `subtitle_${language}.${format}`;
-
-        chrome.downloads.download(
-          { url: blobUrl, filename: filename },
-          () => {
-            URL.revokeObjectURL(blobUrl);
-            if (chrome.runtime.lastError) {
-              statusText.textContent = 'Failed';
-            } else {
-              statusText.textContent = 'Downloaded';
-            }
-            setTimeout(() => resetDownloadState(), 2000);
-          }
-        );
+        triggerDownload(converted, filename);
+        statusText.textContent = 'Downloaded';
+        setTimeout(() => resetDownloadState(), 2000);
       })
       .catch((error) => {
         console.error('[SubTX] Download error:', error);
@@ -472,24 +487,8 @@ document.addEventListener('DOMContentLoaded', () => {
           converted = rawContent;
         }
 
-        const blob = new Blob([converted], { type: 'text/plain;charset=utf-8' });
-        const blobUrl = URL.createObjectURL(blob);
         const filename = `subtitle_${language}.${targetFormat}`;
-
-        await new Promise((resolve, reject) => {
-          chrome.downloads.download(
-            { url: blobUrl, filename: filename },
-            () => {
-              URL.revokeObjectURL(blobUrl);
-              if (chrome.runtime.lastError) {
-                reject(new Error(chrome.runtime.lastError.message));
-              } else {
-                resolve();
-              }
-            }
-          );
-        });
-
+        triggerDownload(converted, filename);
         success++;
       } catch (_err) {
         failed++;
