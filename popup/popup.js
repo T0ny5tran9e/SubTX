@@ -238,6 +238,49 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ===========================================================================
+  // Subtitle Content Fetching
+  // ===========================================================================
+
+  /**
+   * Fetch subtitle content, supporting blob: URLs via content script delegation.
+   * @param {string} url - Subtitle URL (may be blob:)
+   * @returns {Promise<string>} Subtitle text content
+   */
+  async function fetchSubtitleContent(url) {
+    if (!url.startsWith('blob:')) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return await response.text();
+    }
+
+    const tabs = await new Promise(function (resolve) {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (t) {
+        resolve(t);
+      });
+    });
+    const tabId = tabs && tabs[0] ? tabs[0].id : null;
+    if (!tabId) throw new Error('No active tab');
+
+    return await new Promise(function (resolve, reject) {
+      chrome.tabs.sendMessage(tabId, { action: 'fetchSubtitleContent', url: url }, function (res) {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        if (res && res.error) {
+          reject(new Error(res.error));
+          return;
+        }
+        if (res && res.content) {
+          resolve(res.content);
+        } else {
+          reject(new Error('Empty response'));
+        }
+      });
+    });
+  }
+
+  // ===========================================================================
   // Actions
   // ===========================================================================
 
@@ -262,13 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sub = currentSubtitles[index];
     const language = sub && sub.language ? sub.language : 'Unknown';
 
-    fetch(url)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status} ${response.statusText}`);
-        }
-        return response.text();
-      })
+    fetchSubtitleContent(url)
       .then((rawContent) => {
         let converted;
         try {
@@ -334,11 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const rawContent = await response.text();
+        const rawContent = await fetchSubtitleContent(url);
 
         let converted;
         try {

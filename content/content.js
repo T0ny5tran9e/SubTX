@@ -385,6 +385,40 @@ function startPeriodicScan() {
 }
 
 // ═══════════════════════════════════════════
+// Message handler — fetch subtitle content (supports blob: URLs)
+// ═══════════════════════════════════════════
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.action !== 'fetchSubtitleContent') {
+    return;
+  }
+
+  var url = request.url;
+
+  if (!url) {
+    sendResponse({ error: 'No URL provided' });
+    return;
+  }
+
+  fetch(url)
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+      }
+      return response.text();
+    })
+    .then(function (text) {
+      sendResponse({ content: text });
+    })
+    .catch(function (err) {
+      errorLog('Failed to fetch subtitle content:', err.message);
+      sendResponse({ error: err.message });
+    });
+
+  return true; // Keep channel open for async response
+});
+
+// ═══════════════════════════════════════════
 // Initialization
 // ═══════════════════════════════════════════
 
