@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentSubtitles = [];
   let filteredSubtitles = [];
   let isDownloading = false;
-  let allSelected = true;
+  let totalIntercepted = 0;
 
   // ===========================================================================
   // State Management
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const visible = filteredSubtitles.length;
     const selected = filteredSubtitles.filter(s => s.selected).length;
 
-    if (statRequests) statRequests.textContent = String(total);
+    if (statRequests) statRequests.textContent = String(totalIntercepted);
     if (statSubtitles) statSubtitles.textContent = String(total);
     if (subtitleCounter) subtitleCounter.textContent = String(visible);
     if (selectedCount) selectedCount.textContent = String(selected);
@@ -216,6 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (response && Array.isArray(response.subtitles) && response.subtitles.length > 0) {
         const now = Date.now();
+        totalIntercepted += response.subtitles.length;
         return response.subtitles.map((s, i) => ({
           ...s,
           source: s.source || 'content-script',
@@ -252,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
+        totalIntercepted += subtitles.length;
         return subtitles.map((s) => ({
           language: s.language || 'Unknown',
           url: s.url || '',
@@ -319,6 +321,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'subtitle-card';
       card.dataset.index = String(realIndex);
+      card.dataset.url = url;
+
+      // Selection checkbox
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'sub-checkbox';
+      checkbox.checked = sub.selected !== false;
+      card.appendChild(checkbox);
 
       // Language heading
       const langDiv = document.createElement('div');
@@ -343,7 +353,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.dataset.action = 'download';
         btn.dataset.format = fmt;
         btn.dataset.index = String(realIndex);
-        btn.dataset.url = url;
         btn.textContent = fmt.toUpperCase();
         btn.setAttribute('aria-label', `Download as ${fmt.toUpperCase()}`);
         btn.tabIndex = 0;
@@ -354,7 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const copyBtn = document.createElement('button');
       copyBtn.className = 'btn-sm';
       copyBtn.dataset.action = 'copy';
-      copyBtn.dataset.url = url;
       copyBtn.innerHTML = ICONS.copy + ' ';
       copyBtn.setAttribute('aria-label', 'Copy subtitle URL');
       copyBtn.tabIndex = 0;
@@ -375,6 +383,9 @@ document.addEventListener('DOMContentLoaded', () => {
    * @returns {Promise<string>} Subtitle text content
    */
   async function fetchSubtitleContent(url) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     const tabs = await new Promise(function (resolve) {
       chrome.tabs.query({ active: true, currentWindow: true }, function (t) {
         resolve(t);
@@ -384,7 +395,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (tabId) {
       try {
-        return await new Promise(function (resolve, reject) {
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout')), 10000);
+        });
+        const messagePromise = new Promise(function (resolve, reject) {
           chrome.tabs.sendMessage(tabId, { action: 'fetchSubtitleContent', url: url }, function (res) {
             if (chrome.runtime.lastError) {
               reject(new Error(chrome.runtime.lastError.message));
@@ -401,13 +415,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           });
         });
+        const result = await Promise.race([messagePromise, timeoutPromise]);
+        clearTimeout(timeoutId);
+        return result;
       } catch (_msgErr) {
+        // Timeout or error - fall through to fetch
       }
     }
 
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    return await response.text();
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return await response.text();
+    } catch (fetchErr) {
+      if (fetchErr.name === 'AbortError') return null;
+      throw fetchErr;
+    }
   }
 
   // ===========================================================================
@@ -616,12 +639,23 @@ document.addEventListener('DOMContentLoaded', () => {
    * Toggle select all / deselect all for visible subtitles.
    */
   function toggleSelectAll() {
-    allSelected = !allSelected;
+    const checkboxes = document.querySelectorAll('.subtitle-card .sub-checkbox');
+    const checkedCount = [...checkboxes].filter(cb => cb.checked).length;
+    const allChecked = checkedCount === checkboxes.length && checkboxes.length > 0;
+    const newState = !allChecked;
+
     filteredSubtitles.forEach(s => {
-      if (s.visible) s.selected = allSelected;
+      if (s.visible) s.selected = newState;
     });
+
+    currentSubtitles.forEach(s => {
+      s.selected = newState;
+    });
+
+    checkboxes.forEach(cb => { cb.checked = newState; });
+
     if (selectAllBtn) {
-      selectAllBtn.innerHTML = allSelected ? (ICONS.selectAll + ' Select All') : (ICONS.deselectAll + ' Deselect All');
+      selectAllBtn.innerHTML = newState ? (ICONS.deselectAll + ' Deselect All') : (ICONS.selectAll + ' Select All');
     }
     updateStats();
   }
@@ -655,7 +689,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (subtitles.length > 0) {
         currentSubtitles = subtitles.map(s => ({ ...s, selected: true }));
-        allSelected = true;
         if (selectAllBtn) selectAllBtn.innerHTML = ICONS.selectAll + ' Select All';
         applyFilters();
         showState('content');
@@ -680,7 +713,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!actionBtn) return;
 
     const action = actionBtn.dataset.action;
-    const url = actionBtn.dataset.url;
+    const card = actionBtn.closest('.subtitle-card');
+    const url = card ? card.dataset.url : '';
 
     if (action === 'download') {
       const format = actionBtn.dataset.format;
@@ -703,7 +737,8 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
 
     const action = actionBtn.dataset.action;
-    const url = actionBtn.dataset.url;
+    const card = actionBtn.closest('.subtitle-card');
+    const url = card ? card.dataset.url : '';
 
     if (action === 'download') {
       const format = actionBtn.dataset.format;
