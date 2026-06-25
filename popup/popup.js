@@ -303,6 +303,29 @@ document.addEventListener('DOMContentLoaded', () => {
         resetLink.addEventListener('click', resetAllFilters);
         subtitleList.appendChild(document.createTextNode(' '));
         subtitleList.appendChild(resetLink);
+
+        const activeNames = [];
+        const checkedLangs = Array.from(langCheckboxes).filter(cb => cb.checked);
+        if (checkedLangs.length > 0 && checkedLangs.length < langCheckboxes.length) {
+          const labels = checkedLangs.map(function (cb) {
+            return cb.nextElementSibling ? cb.nextElementSibling.textContent : cb.dataset.lang;
+          });
+          activeNames.push(labels.join(', '));
+        }
+        const checkedFormats = Array.from(formatCheckboxes).filter(cb => cb.checked);
+        if (checkedFormats.length > 0 && checkedFormats.length < formatCheckboxes.length) {
+          const labels = checkedFormats.map(function (cb) {
+            return cb.nextElementSibling ? cb.nextElementSibling.textContent : cb.dataset.format;
+          });
+          activeNames.push(labels.join(', '));
+        }
+        if (activeNames.length > 0) {
+          const filterInfo = document.createElement('div');
+          filterInfo.className = 'terminal-text-muted';
+          filterInfo.style.marginTop = '8px';
+          filterInfo.textContent = 'Active filters: ' + activeNames.join(' / ');
+          subtitleList.appendChild(filterInfo);
+        }
       }
 
       return;
@@ -515,16 +538,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show progress panel
     if (downloadProgress) downloadProgress.hidden = false;
+    let currentFile;
     if (progressContainer) {
-      while (progressContainer.firstChild) progressContainer.removeChild(progressContainer.firstChild);
-      const progressBar = document.createElement('div');
-      progressBar.className = 'terminal-progress-bar';
-      const fill = document.createElement('div');
-      fill.className = 'terminal-progress-bar-fill';
-      fill.id = 'progress-fill';
-      fill.style.width = '0%';
-      progressBar.appendChild(fill);
-      progressContainer.appendChild(progressBar);
+      if (progressContainer.querySelector('.terminal-progress-bar')) {
+        const fill = document.getElementById('progress-fill');
+        if (fill) fill.style.width = '0%';
+        const old = progressContainer.querySelector('.current-file');
+        if (old) old.remove();
+      } else {
+        const progressBar = document.createElement('div');
+        progressBar.className = 'terminal-progress-bar';
+        const fill = document.createElement('div');
+        fill.className = 'terminal-progress-bar-fill';
+        fill.id = 'progress-fill';
+        fill.style.width = '0%';
+        progressBar.appendChild(fill);
+        progressContainer.appendChild(progressBar);
+      }
+      currentFile = document.createElement('div');
+      currentFile.className = 'current-file';
+      progressContainer.appendChild(currentFile);
     }
 
     statusText.textContent = `Downloading ${total}...`;
@@ -533,6 +566,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const sub = toDownload[i];
       const url = sub.url;
       const language = sub.language || 'Unknown';
+      const filename = `subtitle_${language}.${targetFormat}`;
+
+      if (currentFile) {
+        currentFile.textContent = `Downloading: ${filename} (${i + 1} of ${total})`;
+      }
 
       if (!url) {
         failed++;
@@ -551,7 +589,6 @@ document.addEventListener('DOMContentLoaded', () => {
           converted = rawContent;
         }
 
-        const filename = `subtitle_${language}.${targetFormat}`;
         triggerDownload(converted, filename);
         success++;
       } catch (_err) {
@@ -562,6 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
       statusText.textContent = `Progress: ${success + failed}/${total}`;
     }
 
+    if (currentFile) currentFile.textContent = '';
     statusText.textContent = `Done: ${success}/${total}`;
     if (downloadProgress) {
       setTimeout(() => { downloadProgress.hidden = true; }, 3000);

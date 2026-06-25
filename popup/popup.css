@@ -838,6 +838,13 @@ body {
   width: 0%;
 }
 
+.current-file {
+  font-size: var(--text-xs);
+  color: var(--text);
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
 /* --------------------------------------------------------------------------
    18. Focus Visible (Keyboard Navigation)
    -------------------------------------------------------------------------- */
@@ -1009,6 +1016,20 @@ body {
 .skeleton-line.w-70 { width: 70%; }
 .skeleton-line.w-75 { width: 75%; }
 .skeleton-line.w-80 { width: 80%; }
+
+.skeleton-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.skeleton-block {
+  width: 48px;
+  height: 28px;
+  background: var(--muted);
+  border-radius: 4px;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
 
 @keyframes skeleton-shimmer {
   0% { background-position: 300% 0; }
