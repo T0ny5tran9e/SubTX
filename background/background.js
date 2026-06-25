@@ -232,7 +232,7 @@ chrome.webRequest.onBeforeRequest.addListener(
       }
     }
   },
-  { urls: ['<all_urls>'], types: ['other', 'xmlhttprequest', 'media', 'script', 'fetch'] }
+  { urls: ['<all_urls>'], types: ['other', 'xmlhttprequest', 'media', 'script'] }
 
 );
 
