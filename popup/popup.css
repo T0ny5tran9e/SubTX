@@ -1,6 +1,6 @@
 /* ==========================================================================
-   SubTX — Popup Styles
-   Modern dark theme for subtitle extraction extension
+   SubTX — Terminal-Inspired Dark Theme
+   100% CSS custom properties — no framework, all hand-rolled.
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -9,113 +9,53 @@
 
 :root {
   /* Core palette */
-  --bg: #0F172A;
-  --surface: #1E293B;
-  --card: #334155;
-  --card-hover: #3B4A5F;
+  --bg: #141D2B;           /* Mirage Blue — primary page background */
+  --panel: #1A2332;        /* Deep Navy — container panel background */
+  --accent: #9FEF00;       /* Lime Green — primary accent, text, borders, glow */
+  --muted: #444444;        /* Neutral Gray — muted borders */
+  --textarea-bg: #232B3B;  /* Slate — textarea/input background */
+  --text: #F8F8F2;         /* Light Ivory — body text */
 
-  /* Accent */
-  --accent: #3B82F6;
-  --accent-hover: #2563EB;
-  --accent-subtle: rgba(59, 130, 246, 0.12);
-  --accent-ring: rgba(59, 130, 246, 0.4);
+  /* Semantic colors */
+  --success: #00BFFF;      /* Deep Sky Blue — success/info */
+  --warn: #FFD700;         /* Gold — warnings */
+  --danger: #FF5555;       /* Red — errors */
 
-  /* Semantic */
-  --success: #22C55E;
-  --success-subtle: rgba(34, 197, 94, 0.12);
-  --warning: #F59E0B;
-  --warning-subtle: rgba(245, 158, 11, 0.12);
-  --error: #EF4444;
-  --error-subtle: rgba(239, 68, 68, 0.12);
+  /* Derived semi-transparent variants */
+  --accent-rgba: rgba(159, 239, 0, 0.08);
+  --accent-rgba-strong: rgba(159, 239, 0, 0.12);
+  --success-rgba: rgba(0, 191, 255, 0.14);
 
-  /* Text */
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
+  /* Typography — terminal monospace stack */
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
 
-  /* Borders */
-  --border: rgba(148, 163, 184, 0.15);
-  --border-hover: rgba(148, 163, 184, 0.3);
+  /* Font sizes */
+  --text-xs: 0.75em;
+  --text-sm: 0.85em;
+  --text-base: 0.92em;
+  --text-lg: 1.4em;
 
-  /* Skeleton */
-  --skeleton-base: #334155;
-  --skeleton-shine: #3B4A5F;
+  /* Spacing (8px grid) */
+  --gap: 8px;
+  --pad: 14px;
 
-  /* Typography */
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-size-xs: 10px;
-  --font-size-sm: 11px;
-  --font-size-base: 12px;
-  --font-size-lg: 13px;
-  --font-size-xl: 14px;
-
-  /* Spacing (4px grid) */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-
-  /* Radius */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-full: 999px;
+  /* Border radius */
+  --radius: 8px;
+  --radius-sm: 6px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 
   /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-base: 200ms ease;
+  --transition: 150ms ease;
 
   /* Layout */
-  --header-height: 48px;
-  --controls-height: 48px;
-  --popup-width: 360px;
-  --popup-min-height: 300px;
-  --popup-max-height: 500px;
+  --popup-width: 540px;
+  --popup-min-height: 500px;
 }
 
 /* --------------------------------------------------------------------------
-   2. Light Mode Override
-   -------------------------------------------------------------------------- */
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #F1F5F9;
-    --surface: #FFFFFF;
-    --card: #FFFFFF;
-    --card-hover: #F8FAFC;
-
-    --accent-subtle: rgba(59, 130, 246, 0.08);
-    --accent-ring: rgba(59, 130, 246, 0.3);
-
-    --success-subtle: rgba(34, 197, 94, 0.08);
-    --warning-subtle: rgba(245, 158, 11, 0.08);
-    --error-subtle: rgba(239, 68, 68, 0.08);
-
-    --text-primary: #0F172A;
-    --text-secondary: #475569;
-    --text-muted: #94A3B8;
-
-    --border: rgba(15, 23, 42, 0.1);
-    --border-hover: rgba(15, 23, 42, 0.2);
-
-    --skeleton-base: #E2E8F0;
-    --skeleton-shine: #F1F5F9;
-
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
-  }
-}
-
-/* --------------------------------------------------------------------------
-   3. Reset & Base
+   2. Reset & Base
    -------------------------------------------------------------------------- */
 
 *,
@@ -128,32 +68,31 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  min-width: var(--popup-width);
 }
 
 body {
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
   line-height: 1.5;
-  color: var(--text-primary);
+  color: var(--accent);
   background: var(--bg);
   width: var(--popup-width);
   min-height: var(--popup-min-height);
-  max-height: var(--popup-max-height);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* --------------------------------------------------------------------------
-   4. App Layout
+   3. Terminal Window
    -------------------------------------------------------------------------- */
 
-#app {
+.terminal-window {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100vh;
-  max-height: var(--popup-max-height);
   min-height: var(--popup-min-height);
   background: var(--bg);
   position: relative;
@@ -161,129 +100,266 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   5. Header
+   4. Terminal Header — Neon Title
    -------------------------------------------------------------------------- */
 
-#header {
+.terminal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: var(--header-height);
-  min-height: var(--header-height);
-  padding: 0 var(--space-4);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+  padding: var(--pad) var(--pad) 6px var(--pad);
   user-select: none;
   -webkit-user-select: none;
-}
-
-.header-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.header-logo-dot {
-  color: var(--accent);
   flex-shrink: 0;
 }
 
-.header-title {
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.header-actions {
+.terminal-title-bar {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--gap);
+  width: 100%;
 }
 
-/* Count badge */
-.count-badge {
-  display: inline-flex;
+.terminal-dots {
+  display: flex;
   align-items: center;
-  padding: 1px 7px;
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--accent);
-  background: var(--accent-subtle);
-  border-radius: var(--radius-full);
-  white-space: nowrap;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-/* Status text */
-.status-text {
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  white-space: nowrap;
+.terminal-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.terminal-dot-close {
+  background: var(--danger);
+}
+
+.terminal-dot-minimize {
+  background: var(--warn);
+}
+
+.terminal-dot-maximize {
+  background: var(--success);
+}
+
+.terminal-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--accent);
+  margin: 0 auto;
+  text-shadow:
+    0 0 5px  var(--accent),
+    0 0 10px var(--accent),
+    0 0 20px var(--accent),
+    0 0 40px #00BFFF;
 }
 
 /* --------------------------------------------------------------------------
-   6. View States (Loading, Empty, Error, Content)
+   5. Terminal Body & Scroll
    -------------------------------------------------------------------------- */
 
-#view-loading,
-#view-empty,
-#view-error,
-#view-content {
+.terminal-body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: var(--gap);
+  padding: 6px var(--pad) var(--pad) var(--pad);
+  overflow-y: auto;
+  overflow-x: hidden;
   min-height: 0;
 }
 
-/* When visible (not .hidden), fill remaining space */
-#view-loading:not(.hidden),
-#view-empty:not(.hidden),
-#view-error:not(.hidden),
-#view-content:not(.hidden) {
-  flex: 1;
+/* --------------------------------------------------------------------------
+   6. Panel System
+   -------------------------------------------------------------------------- */
+
+.terminal-panel {
+  background: var(--panel);
+  border: 1px solid var(--muted);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
-.view-pad {
-  padding: var(--space-3) var(--space-4);
-  height: 100%;
+.panel-header {
+  padding: 6px 10px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--bg);
+  border-bottom: 1px solid var(--muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-.center-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.panel-body {
+  padding: 8px 10px;
 }
 
 /* --------------------------------------------------------------------------
-   7. Subtitle List (scrollable content area)
+   7. Panels Row (Status + Filters Side by Side)
    -------------------------------------------------------------------------- */
 
-#subtitle-list {
+.terminal-panels-row {
+  display: flex;
+  gap: var(--gap);
+  flex-shrink: 0;
+}
+
+.terminal-panel-status {
+  flex: 1;
+  min-width: 0;
+}
+
+.terminal-panel-filter {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   8. Status Panel
+   -------------------------------------------------------------------------- */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 12px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-sm);
+}
+
+.stat-label {
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.stat-value {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.terminal-status-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--muted);
+}
+
+.terminal-prompt {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.terminal-status-text {
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+/* --------------------------------------------------------------------------
+   9. Filter Panel
+   -------------------------------------------------------------------------- */
+
+.filter-section {
+  margin-bottom: 6px;
+}
+
+.filter-section:last-child {
+  margin-bottom: 0;
+}
+
+.filter-label {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--text);
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.checkbox-group .terminal-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  font-size: var(--text-xs);
+  color: var(--text);
+  background: var(--textarea-bg);
+  border: 1px solid var(--muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.checkbox-group .terminal-checkbox:checked + .terminal-checkbox-label {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.checkbox-group .terminal-checkbox-label:hover {
+  background: var(--accent-rgba-strong);
+  border-color: var(--accent);
+}
+
+.terminal-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   10. Subtitle List Panel (Scrollable Content)
+   -------------------------------------------------------------------------- */
+
+.terminal-panel-subtitles {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-panel-subtitles .panel-body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--space-3) var(--space-4);
-  min-height: 0;
+  padding: 6px 8px;
+  min-height: 80px;
+  max-height: 260px;
 }
 
-/* --------------------------------------------------------------------------
-   8. Subtitle Cards
-   -------------------------------------------------------------------------- */
-
+/* Subtitle cards */
 .subtitle-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-2);
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
-  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+  gap: 4px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  background: var(--textarea-bg);
+  border: 1px solid var(--muted);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition), background var(--transition);
 }
 
 .subtitle-card:last-child {
@@ -292,422 +368,431 @@ body {
 
 .subtitle-card:hover {
   border-color: var(--accent);
-  background: var(--card-hover);
-  box-shadow: var(--shadow-sm);
+  background: var(--accent-rgba);
 }
 
-.subtitle-card:active {
-  border-color: var(--accent-hover);
-  background: var(--surface);
-}
-
-/* Language heading */
 .subtitle-lang {
-  font-size: var(--font-size-lg);
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.3;
+  color: var(--accent);
 }
 
-/* Metadata row (format, confidence, source) */
 .subtitle-meta {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-xs);
-  color: var(--text-secondary);
-  line-height: 1.3;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--text);
+  opacity: 0.7;
 }
 
-.subtitle-meta .meta-sep {
-  color: var(--text-muted);
-  opacity: 0.5;
-}
-
-/* Actions row */
 .subtitle-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  padding-top: var(--space-1);
-}
-
-.subtitle-actions .btn-sm {
-  flex-shrink: 0;
+  gap: 4px;
+  padding-top: 4px;
 }
 
 .subtitle-actions .copy-spacer {
   margin-left: auto;
 }
 
-/* --------------------------------------------------------------------------
-   9. Skeleton Loading
-   -------------------------------------------------------------------------- */
-
-.skeleton-card {
-  background: var(--card);
-  border-radius: var(--radius-md);
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-2);
-  border: 1px solid var(--border);
-}
-
-.skeleton-card:last-child {
-  margin-bottom: 0;
-}
-
-.skeleton {
-  height: 12px;
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-2);
-  background: linear-gradient(90deg, var(--skeleton-base) 30%, var(--skeleton-shine) 50%, var(--skeleton-base) 70%);
-  background-size: 300% 100%;
-  animation: skeleton-shimmer 1.6s ease-in-out infinite;
-}
-
-.skeleton:last-child {
-  margin-bottom: 0;
-}
-
-/* Skeleton width variants */
-.skeleton-line.w-35 { width: 35%; }
-.skeleton-line.w-40 { width: 40%; }
-.skeleton-line.w-45 { width: 45%; }
-.skeleton-line.w-50 { width: 50%; }
-.skeleton-line.w-55 { width: 55%; }
-.skeleton-line.w-60 { width: 60%; }
-.skeleton-line.w-65 { width: 65%; }
-.skeleton-line.w-70 { width: 70%; }
-.skeleton-line.w-75 { width: 75%; }
-.skeleton-line.w-80 { width: 80%; }
-
-@keyframes skeleton-shimmer {
-  0% {
-    background-position: 300% 0;
-  }
-  100% {
-    background-position: -300% 0;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   10. Empty State
-   -------------------------------------------------------------------------- */
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: var(--space-8) var(--space-6);
-  gap: var(--space-3);
-  max-width: 280px;
-}
-
-.state-icon {
-  color: var(--text-muted);
-  opacity: 0.6;
-  margin-bottom: var(--space-1);
-}
-
-.state-title {
-  font-size: var(--font-size-xl);
+/* Format download button */
+.subtitle-card .btn-sm {
+  padding: 2px 7px;
+  font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.3;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--muted);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+  line-height: 1.4;
 }
 
-.state-text {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  line-height: 1.5;
-  max-width: 240px;
+.subtitle-card .btn-sm:hover {
+  background: var(--accent-rgba-strong);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
-/* --------------------------------------------------------------------------
-   11. Error State
-   -------------------------------------------------------------------------- */
+.subtitle-card .btn-sm:active {
+  transform: translateY(1px);
+}
 
-.error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.subtitle-card .btn-sm:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.subtitle-card .btn-sm[data-action="copy"] {
+  background: transparent;
+  border-color: transparent;
+  padding: 2px 5px;
+}
+
+.subtitle-card .btn-sm[data-action="copy"]:hover {
+  background: var(--accent-rgba-strong);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Empty text inside results panel */
+.terminal-text-muted {
+  color: var(--text);
+  opacity: 0.5;
+  font-size: var(--text-sm);
   text-align: center;
-  padding: var(--space-8) var(--space-6);
-  gap: var(--space-3);
-  max-width: 280px;
+  padding: 12px 0;
 }
 
-.error-icon-svg {
-  color: var(--error);
+/* --------------------------------------------------------------------------
+   11. Bulk Actions Panel
+   -------------------------------------------------------------------------- */
+
+.bulk-actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.bulk-actions-row:last-child {
+  margin-bottom: 0;
+}
+
+.bulk-format-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.bulk-format-control label {
+  font-size: var(--text-sm);
+  color: var(--text);
   opacity: 0.7;
-  margin-bottom: var(--space-1);
 }
 
-.error-title-color {
-  color: var(--text-primary);
-}
-
-.error-text {
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-/* --------------------------------------------------------------------------
-   12. Bottom Controls Bar
-   -------------------------------------------------------------------------- */
-
-#controls {
-  flex-shrink: 0;
-  height: var(--controls-height);
-  min-height: var(--controls-height);
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.controls-inner {
+.bulk-action-controls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 100%;
-  padding: 0 var(--space-4);
-  gap: var(--space-3);
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-/* Format group */
-.format-group {
+.bulk-filename-row {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--gap);
+  flex-wrap: wrap;
 }
 
-.format-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
+.bulk-filename-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.bulk-filename-control label {
+  font-size: var(--text-sm);
+  color: var(--text);
+  opacity: 0.7;
   white-space: nowrap;
-  flex-shrink: 0;
+}
+
+.bulk-language-append {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.bulk-language-append-text {
+  font-size: var(--text-xs);
+  color: var(--text);
+  opacity: 0.7;
+}
+
+/* Select all button row */
+.bulk-selection-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
 }
 
 /* --------------------------------------------------------------------------
-   13. Format Select
+   12. Commands Panel
    -------------------------------------------------------------------------- */
 
-#bulk-format {
+.commands-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------------------
+   13. Form Elements
+   -------------------------------------------------------------------------- */
+
+/* Select dropdown styled as terminal */
+.terminal-select {
   -webkit-appearance: none;
   appearance: none;
-  background: var(--surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
+  background: var(--textarea-bg);
+  color: var(--accent);
+  border: 1px solid var(--muted);
   border-radius: var(--radius-sm);
   padding: 5px 26px 5px 9px;
-  font-size: var(--font-size-sm);
-  font-family: var(--font-family);
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
   font-weight: 500;
   cursor: pointer;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  min-width: 64px;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2394A3B8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
+  transition: border-color var(--transition), background var(--transition);
+  min-width: 72px;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%239FEF00' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 7px center;
   background-size: 12px;
 }
 
-#bulk-format:hover {
-  border-color: var(--border-hover);
+.terminal-select:hover {
+  background-color: var(--accent-rgba-strong);
 }
 
-#bulk-format:focus-visible {
+.terminal-select:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
-  border-color: var(--accent);
+  outline-offset: 2px;
+  border-color: var(--success);
+  background-color: var(--accent);
+  color: #141D2B;
 }
 
-#bulk-format option {
-  background: var(--surface);
-  color: var(--text-primary);
+.terminal-select:focus-visible option {
+  background: var(--textarea-bg);
+  color: var(--accent);
+}
+
+.terminal-select option {
+  background: var(--textarea-bg);
+  color: var(--accent);
+}
+
+.terminal-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Text input styled as terminal */
+.terminal-input {
+  background: var(--textarea-bg);
+  color: var(--text);
+  border: 1px solid var(--muted);
+  border-radius: var(--radius-sm);
+  padding: 5px 9px;
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  transition: border-color var(--transition), background var(--transition);
+  width: 100%;
+  min-width: 80px;
+}
+
+.terminal-input:hover {
+  background: var(--accent-rgba-strong);
+}
+
+.terminal-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-color: var(--success);
+  background-color: var(--accent);
+  color: #141D2B;
+}
+
+.terminal-input::placeholder {
+  color: var(--text);
+  opacity: 0.4;
+}
+
+.terminal-input:disabled {
+  opacity: 0.6;
 }
 
 /* --------------------------------------------------------------------------
-   14. Buttons
+   14. Buttons — Terminal Styled
    -------------------------------------------------------------------------- */
 
-.btn {
+.terminal-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
+  gap: 6px;
+  padding: 12px 16px;
+  min-height: 44px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
   font-weight: 500;
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: background var(--transition), color var(--transition), border-color var(--transition), box-shadow var(--transition), transform var(--transition);
   user-select: none;
   -webkit-user-select: none;
   white-space: nowrap;
-  text-decoration: none;
   line-height: 1;
-  padding: 5px 10px;
+  text-decoration: none;
 }
 
-/* Primary button */
-.btn-primary {
+.terminal-btn:hover {
   background: var(--accent);
-  color: #FFFFFF;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
+  color: #141D2B;
+  box-shadow: 0 0 8px var(--accent), 0 0 12px #00BFFF;
 }
 
-.btn-primary:hover {
-  background: var(--accent-hover);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary:active {
-  background: var(--accent-hover);
-  transform: translateY(1px);
-  box-shadow: none;
-}
-
-.btn-primary:disabled,
-.btn-primary[disabled] {
-  background: var(--card);
-  color: var(--text-muted);
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-}
-
-.btn-primary:disabled:hover,
-.btn-primary[disabled]:hover {
-  background: var(--card);
-}
-
-/* Small format button */
-.btn-sm {
-  padding: 3px 7px;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-}
-
-.btn-sm:hover {
-  background: var(--card);
-  border-color: var(--border-hover);
-  color: var(--text-primary);
-}
-
-.btn-sm:active {
-  background: var(--card-hover);
+.terminal-btn:active {
   transform: translateY(1px);
 }
 
-.btn-sm:focus-visible {
+.terminal-btn:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px;
+  border-color: #00BFFF;
 }
 
-/* Format download button highlight */
-.btn-sm[data-action="download"]:hover {
-  background: var(--accent-subtle);
-  border-color: var(--accent);
+.terminal-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Primary variant — inverted by default */
+.terminal-btn-primary {
+  background: var(--accent);
+  color: #141D2B;
+  font-weight: 600;
+}
+
+.terminal-btn-primary:hover {
+  background: var(--bg);
   color: var(--accent);
+  box-shadow: 0 0 8px var(--accent), 0 0 12px #00BFFF;
 }
 
-/* Copy button subtle style */
-.btn-sm[data-action="copy"] {
-  background: transparent;
-  border-color: transparent;
-  padding: 3px 6px;
+/* Danger variant */
+.terminal-btn-danger {
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
-.btn-sm[data-action="copy"]:hover {
-  background: var(--accent-subtle);
-  border-color: var(--accent);
-  color: var(--accent);
+.terminal-btn-danger:hover {
+  background: var(--danger);
+  color: #141D2B;
+  box-shadow: 0 0 8px var(--danger);
+  border-color: var(--danger);
+}
+
+/* Small button for inline actions */
+.terminal-btn-sm {
+  padding: 6px 12px;
+  min-height: 32px;
+  font-size: var(--text-xs);
+  border-radius: var(--radius-sm);
 }
 
 /* Icon-only button */
-.btn-icon {
-  padding: 5px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  line-height: 0;
-}
-
-.btn-icon:hover {
-  background: var(--accent-subtle);
-  color: var(--accent);
+.terminal-btn-icon {
+  padding: 6px;
+  min-height: auto;
   border-color: transparent;
+  background: transparent;
+  color: var(--text);
+  opacity: 0.7;
 }
 
-.btn-icon:active {
-  background: var(--accent-subtle);
-  color: var(--accent-hover);
-  transform: translateY(1px);
-}
-
-.btn-icon:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.terminal-btn-icon:hover {
+  background: var(--accent-rgba-strong);
   color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: none;
+  opacity: 1;
 }
 
-/* Button with icon + text (bulk download) */
-#bulk-download-btn svg {
+.terminal-btn-icon:focus-visible {
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   15. Download Progress
+   -------------------------------------------------------------------------- */
+
+.terminal-panel-progress {
   flex-shrink: 0;
 }
 
-#bulk-download-btn span {
-  line-height: 1;
+.progress-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: var(--text-xs);
+  color: var(--text);
+}
+
+.progress-item .progress-status {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.progress-item .progress-status.done {
+  color: var(--success);
+}
+
+.progress-item .progress-status.error {
+  color: var(--danger);
 }
 
 /* --------------------------------------------------------------------------
-   15. Empty / Error State Buttons
+   16. Status Message
    -------------------------------------------------------------------------- */
 
-.empty-state .btn-primary,
-.error-state .btn-primary {
-  padding: 7px 16px;
-  font-size: var(--font-size-sm);
-  margin-top: var(--space-1);
+.terminal-message {
+  padding: 6px 10px;
+  font-size: var(--text-xs);
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--muted);
+  border-radius: var(--radius-sm);
+  min-height: 28px;
 }
 
 /* --------------------------------------------------------------------------
-   16. Hidden Utility
+   17. Progress Bar
    -------------------------------------------------------------------------- */
 
-.hidden {
-  display: none !important;
-}
-
-/* --------------------------------------------------------------------------
-   17. Custom Scrollbar
-   -------------------------------------------------------------------------- */
-
-#subtitle-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-#subtitle-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-#subtitle-list::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
+.terminal-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--textarea-bg);
   border-radius: 2px;
-  min-height: 32px;
+  overflow: hidden;
+  margin-top: 4px;
 }
 
-#subtitle-list::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+.terminal-progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 300ms ease;
+  width: 0%;
 }
 
 /* --------------------------------------------------------------------------
@@ -723,66 +808,59 @@ body {
   outline-offset: 2px;
 }
 
-/* Remove focus ring for mouse clicks (keep only for keyboard) */
 :focus:not(:focus-visible) {
   outline: none;
 }
 
 /* --------------------------------------------------------------------------
-   19. Animations & Keyframes
+   19. Custom Scrollbar — WebKit
    -------------------------------------------------------------------------- */
 
-@keyframes skeleton-shimmer {
-  0% { background-position: 300% 0; }
-  100% { background-position: -300% 0; }
+.terminal-body::-webkit-scrollbar,
+.terminal-panel-subtitles .panel-body::-webkit-scrollbar {
+  width: 8px;
 }
 
-/* Fade-in for view transitions */
-#view-content:not(.hidden) {
-  animation: view-fadein 200ms ease-out;
+.terminal-body::-webkit-scrollbar-track,
+.terminal-panel-subtitles .panel-body::-webkit-scrollbar-track {
+  background: linear-gradient(
+    180deg,
+    rgba(20, 29, 43, 0.6),
+    rgba(26, 35, 50, 0.6)
+  );
 }
 
-#view-empty:not(.hidden) {
-  animation: view-fadein 200ms ease-out;
+.terminal-body::-webkit-scrollbar-thumb,
+.terminal-panel-subtitles .panel-body::-webkit-scrollbar-thumb {
+  background-color: var(--accent);
+  border: 3px solid var(--textarea-bg);
+  border-radius: 4px;
+  min-height: 32px;
 }
 
-#view-error:not(.hidden) {
-  animation: view-fadein 200ms ease-out;
+.terminal-body::-webkit-scrollbar-thumb:hover,
+.terminal-panel-subtitles .panel-body::-webkit-scrollbar-thumb:hover {
+  background-color: #cfff33;
 }
 
-@keyframes view-fadein {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Pulse animation for skeleton cards (layered on hover during loading) */
-.skeleton-card {
-  animation: skeleton-card-pulse 2s ease-in-out infinite;
-}
-
-.skeleton-card:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.skeleton-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-@keyframes skeleton-card-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.85; }
+/* Firefox scrollbar */
+.terminal-body,
+.terminal-panel-subtitles .panel-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--textarea-bg);
 }
 
 /* --------------------------------------------------------------------------
-   20. Reduced Motion
+   20. Accessibility
    -------------------------------------------------------------------------- */
 
+/* Hidden utility — support both attribute and class */
+[hidden],
+.hidden {
+  display: none !important;
+}
+
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -792,110 +870,170 @@ body {
     transition-duration: 0.01ms !important;
   }
 
-  .skeleton {
-    animation: none;
-    background: var(--skeleton-base);
-  }
-
-  .skeleton-card {
-    animation: none;
-  }
-
-  #view-content:not(.hidden),
-  #view-empty:not(.hidden),
-  #view-error:not(.hidden) {
-    animation: none;
-  }
-
-  .btn:active {
+  .terminal-btn:active {
     transform: none;
   }
 }
 
-/* --------------------------------------------------------------------------
-   21. Empty State Button Hover Within Context
-   -------------------------------------------------------------------------- */
-
-.empty-state .btn-primary:hover,
-.error-state .btn-primary:hover {
-  background: var(--accent-hover);
-}
-
-.empty-state .btn-primary:active,
-.error-state .btn-primary:active {
-  background: var(--accent-hover);
-  transform: translateY(1px);
-}
-
-/* --------------------------------------------------------------------------
-   22. Miscellaneous Utilities
-   -------------------------------------------------------------------------- */
-
-/* Ensure scrollable areas work correctly */
-#view-content {
-  overflow: hidden;
-}
-
-/* Prevent text selection on interactive elements */
-.btn,
-#bulk-format,
-.subtitle-card {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Smooth scroll for content area */
-#subtitle-list {
-  scroll-behavior: smooth;
-}
-
-/* --------------------------------------------------------------------------
-   23. High Contrast / Reduced Transparency (Accessibility)
-   -------------------------------------------------------------------------- */
-
+/* High contrast */
 @media (prefers-contrast: high) {
   :root {
-    --border: var(--text-muted);
-    --border-hover: var(--text-secondary);
+    --muted: #666666;
   }
 
-  .subtitle-card {
+  .terminal-panel {
     border-width: 1.5px;
-  }
-
-  #header {
-    border-bottom-width: 1.5px;
-  }
-
-  #controls {
-    border-top-width: 1.5px;
   }
 }
 
+/* Reduced transparency */
 @media (prefers-reduced-transparency: reduce) {
   :root {
-    --shadow-sm: none;
-    --shadow-md: none;
-    --shadow-card: none;
-  }
-
-  .subtitle-card {
-    border-width: 1px;
+    --shadow: none;
   }
 }
 
 /* --------------------------------------------------------------------------
-   24. Print / Save Styles
+   21. Responsive Breakpoints
    -------------------------------------------------------------------------- */
 
-@media print {
+@media (max-width: 540px) {
   body {
-    width: auto;
-    height: auto;
-    overflow: visible;
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  :root {
+    --popup-width: 420px;
   }
 
-  #app {
-    height: auto;
-    max-height: none;
+  .terminal-panels-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --popup-width: 360px;
+  }
+
+  .terminal-title {
+    font-size: 1.2em;
+  }
+
+  .terminal-btn {
+    width: 100%;
+  }
+
+  .bulk-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bulk-action-controls {
+    flex-direction: column;
+  }
+
+  .commands-row {
+    flex-direction: column;
+  }
+
+  .checkbox-group {
+    gap: 3px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   22. Count Badge (Header)
+   -------------------------------------------------------------------------- */
+
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   23. Skeleton Loading
+   -------------------------------------------------------------------------- */
+
+.skeleton-card {
+  background: var(--textarea-bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border: 1px solid var(--muted);
+}
+
+.skeleton-card:last-child {
+  margin-bottom: 0;
+}
+
+.skeleton-line {
+  height: 10px;
+  border-radius: 3px;
+  margin-bottom: 6px;
+  background: linear-gradient(90deg, var(--muted) 30%, var(--accent-rgba-strong) 50%, var(--muted) 70%);
+  background-size: 300% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+.skeleton-line:last-child {
+  margin-bottom: 0;
+}
+
+.skeleton-line.w-35 { width: 35%; }
+.skeleton-line.w-40 { width: 40%; }
+.skeleton-line.w-45 { width: 45%; }
+.skeleton-line.w-50 { width: 50%; }
+.skeleton-line.w-55 { width: 55%; }
+.skeleton-line.w-60 { width: 60%; }
+.skeleton-line.w-65 { width: 65%; }
+.skeleton-line.w-70 { width: 70%; }
+.skeleton-line.w-75 { width: 75%; }
+.skeleton-line.w-80 { width: 80%; }
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 300% 0; }
+  100% { background-position: -300% 0; }
+}
+
+/* Pulse animation for loading panel */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.terminal-panel.loading .panel-body {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   24. Animations
+   -------------------------------------------------------------------------- */
+
+/* Fade in for panels */
+.terminal-panel {
+  animation: panel-fadein 200ms ease-out;
+}
+
+@keyframes panel-fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

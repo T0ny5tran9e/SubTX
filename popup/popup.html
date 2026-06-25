@@ -7,113 +7,261 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div id="app">
+  <div class="terminal-window" role="dialog" aria-labelledby="appTitle">
 
-    <!-- Header -->
-    <header id="header">
-      <div class="header-brand">
-        <svg class="header-logo-dot" viewBox="0 0 8 8" width="8" height="8" aria-hidden="true">
-          <circle cx="4" cy="4" r="3"/>
-        </svg>
-        <span class="header-title">SubTX</span>
+    <!-- ============================================================
+         Terminal Header — Neon Title
+         ============================================================ -->
+    <div class="terminal-header">
+      <div class="terminal-title-bar">
+        <div class="terminal-dots" aria-hidden="true">
+          <span class="terminal-dot terminal-dot-close"></span>
+          <span class="terminal-dot terminal-dot-minimize"></span>
+          <span class="terminal-dot terminal-dot-maximize"></span>
+        </div>
+        <h1 class="terminal-title" id="appTitle">SubTX</h1>
+        <span id="subtitle-count" class="count-badge hidden" aria-live="polite">0</span>
       </div>
-      <div class="header-actions">
-        <span id="subtitle-count" class="count-badge hidden">0 found</span>
-        <span id="status-text" class="status-text"></span>
-        <button id="refresh-btn" class="btn btn-icon" type="button" aria-label="Refresh subtitles" title="Refresh">
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M1 8a7 7 0 0 1 13.17-3.17"/>
-            <path d="M15 1v4h-4"/>
-            <path d="M15 8a7 7 0 0 1-13.17 3.17"/>
-            <path d="M1 15v-4h4"/>
-          </svg>
-        </button>
-      </div>
-    </header>
+    </div>
 
-    <!-- View: Loading -->
-    <div id="view-loading">
-      <div class="view-pad">
-        <div class="skeleton-card">
-          <div class="skeleton skeleton-line w-55"></div>
-          <div class="skeleton skeleton-line w-75"></div>
-          <div class="skeleton skeleton-line w-40"></div>
-        </div>
-        <div class="skeleton-card">
-          <div class="skeleton skeleton-line w-60"></div>
-          <div class="skeleton skeleton-line w-65"></div>
-          <div class="skeleton skeleton-line w-45"></div>
-        </div>
-        <div class="skeleton-card">
-          <div class="skeleton skeleton-line w-50"></div>
-          <div class="skeleton skeleton-line w-80"></div>
-          <div class="skeleton skeleton-line w-35"></div>
+    <!-- ============================================================
+         View: Loading State
+         ============================================================ -->
+    <div id="view-loading" class="terminal-body">
+      <div class="terminal-panel loading">
+        <div class="panel-header">Scanning...</div>
+        <div class="panel-body">
+          <div class="skeleton-card">
+            <div class="skeleton-line w-55"></div>
+            <div class="skeleton-line w-75"></div>
+            <div class="skeleton-line w-40"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-line w-60"></div>
+            <div class="skeleton-line w-65"></div>
+            <div class="skeleton-line w-45"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-line w-50"></div>
+            <div class="skeleton-line w-80"></div>
+            <div class="skeleton-line w-35"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- View: Empty -->
-    <div id="view-empty" class="hidden">
-      <div class="view-pad center-content">
-        <div class="empty-state">
-          <svg class="state-icon" viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="4" y="12" width="56" height="40" rx="4"/>
-            <path d="M18 26a4 4 0 0 1 4-4h2"/>
-            <path d="M18 34a4 4 0 0 0 4 4h2"/>
-            <path d="M36 26a4 4 0 0 1 4-4h2"/>
-            <path d="M36 34a4 4 0 0 0 4 4h2"/>
-          </svg>
-          <h2 class="state-title">No subtitles found</h2>
-          <p class="state-text">Try refreshing the page or navigating to a video with subtitles.</p>
-          <button class="btn btn-primary" type="button">Scan Page</button>
+    <!-- ============================================================
+         View: Empty State
+         ============================================================ -->
+    <div id="view-empty" class="terminal-body hidden">
+      <div class="terminal-panel">
+        <div class="panel-header">Status</div>
+        <div class="panel-body" style="text-align:center;padding:24px 16px;">
+          <div style="font-size:2em;margin-bottom:8px;opacity:0.5;">~</div>
+          <div style="color:var(--text);opacity:0.7;font-size:var(--text-sm);margin-bottom:12px;">
+            No subtitles detected
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--text);opacity:0.5;margin-bottom:16px;line-height:1.6;">
+            Navigate to a video with subtitles<br>
+            then scan the page.
+          </div>
+          <button id="scan-btn" class="terminal-btn terminal-btn-primary terminal-btn-sm" type="button" data-action="scan">
+            $ scan --subtitles
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- View: Error -->
-    <div id="view-error" class="hidden">
-      <div class="view-pad center-content">
-        <div class="error-state">
-          <svg class="state-icon error-icon-svg" viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="32" cy="32" r="28"/>
-            <path d="M32 20v16"/>
-            <path d="M32 42v2"/>
-          </svg>
-          <h2 class="state-title error-title-color">Something went wrong</h2>
-          <p id="error-message" class="state-text error-text">An unexpected error occurred while scanning.</p>
-          <button class="btn btn-primary" type="button">Retry</button>
+    <!-- ============================================================
+         View: Error State
+         ============================================================ -->
+    <div id="view-error" class="terminal-body hidden">
+      <div class="terminal-panel">
+        <div class="panel-header" style="color:var(--danger);">Error</div>
+        <div class="panel-body" style="text-align:center;padding:24px 16px;">
+          <div style="font-size:2em;margin-bottom:8px;color:var(--danger);opacity:0.7;">!</div>
+          <div style="color:var(--danger);font-size:var(--text-sm);margin-bottom:8px;">
+            Scan failed
+          </div>
+          <div id="error-message" style="font-size:var(--text-xs);color:var(--text);opacity:0.5;margin-bottom:16px;">
+            An unexpected error occurred.
+          </div>
+          <button id="retry-btn" class="terminal-btn terminal-btn-danger terminal-btn-sm" type="button" data-action="retry">
+            $ retry
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- View: Content -->
-    <div id="view-content" class="hidden">
-      <div id="subtitle-list">
-        <!-- Subtitle cards are injected by popup.js -->
+    <!-- ============================================================
+         View: Content (Main UI with all panels)
+         ============================================================ -->
+    <div id="view-content" class="terminal-body hidden">
+
+      <!-- Row: Status + Filters -->
+      <div class="terminal-panels-row">
+        <!-- Status Panel -->
+        <div class="terminal-panel terminal-panel-status">
+          <div class="panel-header">Status</div>
+          <div class="panel-body">
+            <div class="stat-grid">
+              <div class="stat-row">
+                <span class="stat-label">Intercepted:</span>
+                <span id="stat-requests" class="stat-value">0</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Subtitles:</span>
+                <span id="stat-subtitles" class="stat-value">0</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Listed:</span>
+                <span id="subtitle-counter" class="stat-value">0</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Selected:</span>
+                <span id="selected-count" class="stat-value">0</span>
+              </div>
+            </div>
+            <div class="terminal-status-line">
+              <span class="terminal-prompt">$</span>
+              <span id="status-text" class="terminal-status-text">Ready</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Panel -->
+        <div class="terminal-panel terminal-panel-filter">
+          <div class="panel-header">Filters</div>
+          <div class="panel-body">
+            <!-- Language Filters -->
+            <div class="filter-section">
+              <span class="filter-label">Language</span>
+              <div class="checkbox-group" id="language-filters">
+                <input type="checkbox" id="lang-en" class="terminal-checkbox" data-lang="en" checked>
+                <label for="lang-en" class="terminal-checkbox-label" title="English">en</label>
+                <input type="checkbox" id="lang-es" class="terminal-checkbox" data-lang="es" checked>
+                <label for="lang-es" class="terminal-checkbox-label" title="Spanish">es</label>
+                <input type="checkbox" id="lang-fr" class="terminal-checkbox" data-lang="fr" checked>
+                <label for="lang-fr" class="terminal-checkbox-label" title="French">fr</label>
+                <input type="checkbox" id="lang-de" class="terminal-checkbox" data-lang="de" checked>
+                <label for="lang-de" class="terminal-checkbox-label" title="German">de</label>
+                <input type="checkbox" id="lang-it" class="terminal-checkbox" data-lang="it" checked>
+                <label for="lang-it" class="terminal-checkbox-label" title="Italian">it</label>
+                <input type="checkbox" id="lang-pt" class="terminal-checkbox" data-lang="pt" checked>
+                <label for="lang-pt" class="terminal-checkbox-label" title="Portuguese">pt</label>
+                <input type="checkbox" id="lang-ru" class="terminal-checkbox" data-lang="ru" checked>
+                <label for="lang-ru" class="terminal-checkbox-label" title="Russian">ru</label>
+                <input type="checkbox" id="lang-ar" class="terminal-checkbox" data-lang="ar" checked>
+                <label for="lang-ar" class="terminal-checkbox-label" title="Arabic">ar</label>
+              </div>
+            </div>
+            <!-- Format Filters -->
+            <div class="filter-section">
+              <span class="filter-label">Format</span>
+              <div class="checkbox-group" id="format-filters">
+                <input type="checkbox" id="format-vtt" class="terminal-checkbox" data-format="vtt" checked>
+                <label for="format-vtt" class="terminal-checkbox-label" title="WebVTT">VTT</label>
+                <input type="checkbox" id="format-srt" class="terminal-checkbox" data-format="srt" checked>
+                <label for="format-srt" class="terminal-checkbox-label" title="SubRip">SRT</label>
+                <input type="checkbox" id="format-txt" class="terminal-checkbox" data-format="txt" checked>
+                <label for="format-txt" class="terminal-checkbox-label" title="Plain Text">TXT</label>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- Subtitle Results Panel -->
+      <div class="terminal-panel terminal-panel-subtitles">
+        <div class="panel-header">Results</div>
+        <div class="panel-body" id="subtitle-list">
+          <div class="terminal-text-muted">Scanning for subtitles...</div>
+        </div>
+      </div>
+
+      <!-- Bulk Actions Panel -->
+      <div class="terminal-panel">
+        <div class="panel-header">Bulk Actions</div>
+        <div class="panel-body">
+          <!-- Row 1: Format + Download + Copy -->
+          <div class="bulk-actions-row">
+            <div class="bulk-format-control">
+              <label for="bulk-format">Format:</label>
+              <select id="bulk-format" class="terminal-select">
+                <option value="vtt">VTT</option>
+                <option value="srt">SRT</option>
+                <option value="txt">TXT</option>
+              </select>
+            </div>
+            <div class="bulk-action-controls">
+              <button id="download-selected-btn" class="terminal-btn terminal-btn-primary terminal-btn-sm" type="button" title="Download selected subtitles" disabled>
+                &#x1F5E1; Download
+              </button>
+              <button id="copy-links-btn" class="terminal-btn terminal-btn-sm" type="button" title="Copy selected subtitle links" disabled>
+                &#x1F4CB; Copy
+              </button>
+            </div>
+          </div>
+          <!-- Row 2: Filename Options -->
+          <div class="bulk-filename-row">
+            <div class="bulk-filename-control">
+              <label for="bulk-filename">Name:</label>
+              <input type="text" id="bulk-filename" class="terminal-input" placeholder="subtitle" disabled>
+            </div>
+            <div class="bulk-language-append">
+              <input type="checkbox" id="bulk-append-language" class="terminal-checkbox" checked disabled>
+              <label for="bulk-append-language" class="terminal-checkbox-label"></label>
+              <span class="bulk-language-append-text">+lang</span>
+            </div>
+          </div>
+          <!-- Row 3: Select All -->
+          <div class="bulk-selection-row">
+            <button id="select-all-btn" class="terminal-btn terminal-btn-sm" type="button" title="Select/deselect all subtitles">
+              &#x2611; Select All
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Commands Panel -->
+      <div class="terminal-panel">
+        <div class="panel-header">Commands</div>
+        <div class="panel-body">
+          <div class="commands-row">
+            <button id="refresh-btn" class="terminal-btn terminal-btn-primary terminal-btn-sm" type="button" title="Refresh subtitle detection">
+              &#x1F504; Refresh
+            </button>
+            <button id="copy-all-btn" class="terminal-btn terminal-btn-sm" type="button" title="Copy all subtitle links">
+              &#x1F4CB; Copy All
+            </button>
+            <button id="settings-btn" class="terminal-btn terminal-btn-sm" type="button" title="Settings">
+              &#x2699; Settings
+            </button>
+            <button id="clear-cache-btn" class="terminal-btn terminal-btn-sm" type="button" title="Clear cache">
+              &#x1F5D1; Clear
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download Progress -->
+      <div id="download-progress" class="terminal-panel terminal-panel-progress" hidden>
+        <div class="panel-header" style="color:var(--success);">Progress</div>
+        <div class="panel-body" id="progress-container">
+          <div class="terminal-progress-bar">
+            <div class="terminal-progress-bar-fill" id="progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Message -->
+      <div id="detailed-status" class="terminal-message" role="status" aria-live="polite">&nbsp;</div>
     </div>
 
-    <!-- Bottom Controls -->
-    <div id="controls" class="hidden">
-      <div class="controls-inner">
-        <div class="format-group">
-          <label for="bulk-format" class="format-label">Format</label>
-          <select id="bulk-format">
-            <option value="vtt">VTT</option>
-            <option value="srt">SRT</option>
-            <option value="txt">TXT</option>
-          </select>
-        </div>
-        <button id="bulk-download-btn" class="btn btn-primary" type="button" disabled>
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M8 1v10"/>
-            <path d="M4 7l4 4 4-4"/>
-            <path d="M1 13v2h14v-2"/>
-          </svg>
-          <span>Download 0</span>
-        </button>
-      </div>
-    </div>
+    <!-- ============================================================
+         Bottom Controls Bar (legacy, kept for internal state refs)
+         ============================================================ -->
+    <div id="controls" hidden aria-hidden="true"></div>
 
   </div>
   <script src="subtitle-converter.js"></script>

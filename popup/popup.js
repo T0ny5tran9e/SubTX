@@ -1,35 +1,62 @@
 /**
  * SubTX — Popup UI Controller
- * State management, async subtitle queries, event delegation, keyboard nav.
- * Manifest V3 — Microsoft Edge subtitle extractor.
+ * Terminal-themed subtitle detection & download UI for Manifest V3.
  *
- * DOM Contract: Uses exact IDs/classes/data-attributes from the spec.
- * No innerHTML for dynamic data. No per-button listeners (delegation only).
+ * DOM Contract: IDs/classes mirror popup.html panel structure.
+ * No innerHTML for dynamic data. Delegation-only event handling.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   'use strict';
 
   // ===========================================================================
-  // DOM References (exact IDs from contract)
+  // DOM References
   // ===========================================================================
   const subtitleList = document.getElementById('subtitle-list');
   const subtitleCount = document.getElementById('subtitle-count');
   const statusText = document.getElementById('status-text');
   const refreshBtn = document.getElementById('refresh-btn');
   const bulkFormat = document.getElementById('bulk-format');
-  const bulkDownloadBtn = document.getElementById('bulk-download-btn');
+  const bulkDownloadBtn = document.getElementById('download-selected-btn');
+
+  // View states
   const viewLoading = document.getElementById('view-loading');
   const viewEmpty = document.getElementById('view-empty');
   const viewError = document.getElementById('view-error');
   const viewContent = document.getElementById('view-content');
+  const controls = document.getElementById('controls');
+
+  // Stats panel
+  const statRequests = document.getElementById('stat-requests');
+  const statSubtitles = document.getElementById('stat-subtitles');
+  const subtitleCounter = document.getElementById('subtitle-counter');
+  const selectedCount = document.getElementById('selected-count');
+
+  // Buttons
+  const copyLinksBtn = document.getElementById('copy-links-btn');
+  const copyAllBtn = document.getElementById('copy-all-btn');
+  const selectAllBtn = document.getElementById('select-all-btn');
+  const settingsBtn = document.getElementById('settings-btn');
+  const clearCacheBtn = document.getElementById('clear-cache-btn');
+  const bulkFilename = document.getElementById('bulk-filename');
+  const bulkAppendLang = document.getElementById('bulk-append-language');
+
+  // Progress
+  const downloadProgress = document.getElementById('download-progress');
+  const progressContainer = document.getElementById('progress-container');
+
+  // Filter checkboxes
+  const langCheckboxes = document.querySelectorAll('#language-filters .terminal-checkbox');
+  const formatCheckboxes = document.querySelectorAll('#format-filters .terminal-checkbox');
 
   // ===========================================================================
   // State
   // ===========================================================================
   /** @type {Array<{language:string, url:string, format:string, confidence:number, source:string}>} */
   let currentSubtitles = [];
+  let filteredSubtitles = [];
   let isDownloading = false;
+  let allSelected = true;
 
   // ===========================================================================
   // State Management
@@ -53,15 +80,65 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
       case 'empty':
         viewEmpty.classList.remove('hidden');
+        statusText.textContent = 'No subtitles';
         break;
       case 'error':
         viewError.classList.remove('hidden');
+        statusText.textContent = 'Error';
         break;
       case 'content':
         viewContent.classList.remove('hidden');
-        controls.classList.remove('hidden');
+        statusText.textContent = 'Ready';
         break;
     }
+  }
+
+  /**
+   * Update stats panel values.
+   */
+  function updateStats() {
+    const total = currentSubtitles.length;
+    const visible = filteredSubtitles.length;
+    const selected = filteredSubtitles.filter(s => s.selected).length;
+
+    if (statRequests) statRequests.textContent = String(total);
+    if (statSubtitles) statSubtitles.textContent = String(total);
+    if (subtitleCounter) subtitleCounter.textContent = String(visible);
+    if (selectedCount) selectedCount.textContent = String(selected);
+    if (subtitleCount) subtitleCount.textContent = visible > 0 ? String(visible) : '';
+
+    // Update bulk buttons state
+    const hasSelection = selected > 0;
+    if (bulkDownloadBtn) bulkDownloadBtn.disabled = !hasSelection;
+    if (copyLinksBtn) copyLinksBtn.disabled = !hasSelection;
+    if (bulkFilename) bulkFilename.disabled = !hasSelection;
+    if (bulkAppendLang) bulkAppendLang.disabled = !hasSelection;
+  }
+
+  /**
+   * Apply language and format filters to currentSubtitles.
+   * @returns {Array} Filtered subtitle array with .selected flag.
+   */
+  function applyFilters() {
+    const activeLangs = new Set();
+    langCheckboxes.forEach(cb => {
+      if (cb.checked) activeLangs.add(cb.dataset.lang);
+    });
+
+    const activeFormats = new Set();
+    formatCheckboxes.forEach(cb => {
+      if (cb.checked) activeFormats.add(cb.dataset.format);
+    });
+
+    filteredSubtitles = currentSubtitles.map(sub => {
+      const langMatch = activeLangs.size === 0 || activeLangs.has((sub.language || '').toLowerCase().slice(0, 2));
+      const fmtMatch = activeFormats.size === 0 || activeFormats.has((sub.format || 'vtt').toLowerCase());
+      return { ...sub, visible: langMatch && fmtMatch, selected: sub.selected !== false };
+    });
+
+    renderFilteredCards();
+    updateStats();
+    return filteredSubtitles;
   }
 
   // ===========================================================================
@@ -129,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (Array.isArray(result) && result.length > 0) {
-        // Filter to only subtitles matching the current tab
         const tabs = await new Promise((resolve) => {
           chrome.tabs.query({ active: true, currentWindow: true }, (t) => resolve(t));
         });
@@ -164,19 +240,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===========================================================================
 
   /**
-   * Render subtitle cards into the list.
-   * Uses createElement / textContent / appendChild — NO innerHTML for data.
-   * @param {Array} subtitles
+   * Render filtered subtitle cards into list.
+   * createElement / textContent / appendChild — NO innerHTML for data.
    */
-  function renderCards(subtitles) {
-    // Clear previous content
+  function renderFilteredCards() {
     while (subtitleList.firstChild) {
       subtitleList.removeChild(subtitleList.firstChild);
     }
 
-    currentSubtitles = subtitles;
+    const visible = filteredSubtitles.filter(s => s.visible);
 
-    subtitles.forEach((sub, index) => {
+    if (visible.length === 0) {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'terminal-text-muted';
+      emptyMsg.textContent = 'No subtitles match current filters.';
+      subtitleList.appendChild(emptyMsg);
+      return;
+    }
+
+    visible.forEach((sub, displayIndex) => {
+      const realIndex = currentSubtitles.indexOf(sub);
       const confidence = typeof sub.confidence === 'number' ? sub.confidence : 0;
       const source = (sub.source || '').split('-')[0] || 'unknown';
       const subtitleFormat = sub.format || 'vtt';
@@ -184,34 +267,34 @@ document.addEventListener('DOMContentLoaded', () => {
       const url = sub.url || '';
       const safeLang = language.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'unknown';
 
-      // --- Card container ---
+      // Card container
       const card = document.createElement('div');
       card.className = 'subtitle-card';
+      card.dataset.index = String(realIndex);
 
-      // --- Language heading ---
+      // Language heading
       const langDiv = document.createElement('div');
       langDiv.className = 'subtitle-lang';
       langDiv.textContent = language;
       card.appendChild(langDiv);
 
-      // --- Metadata row ---
+      // Metadata row
       const metaDiv = document.createElement('div');
       metaDiv.className = 'subtitle-meta';
       metaDiv.textContent = `${safeLang}.${subtitleFormat} \u00B7 ${(confidence * 100).toFixed(0)}% \u00B7 ${source}`;
       card.appendChild(metaDiv);
 
-      // --- Actions row ---
+      // Actions row
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'subtitle-actions';
 
-      // Format buttons: SRT, VTT, TXT
       const formats = ['srt', 'vtt', 'txt'];
       formats.forEach((fmt) => {
         const btn = document.createElement('button');
-        btn.className = 'btn btn-sm';
+        btn.className = 'btn-sm';
         btn.dataset.action = 'download';
         btn.dataset.format = fmt;
-        btn.dataset.index = String(index);
+        btn.dataset.index = String(realIndex);
         btn.dataset.url = url;
         btn.textContent = fmt.toUpperCase();
         btn.setAttribute('aria-label', `Download as ${fmt.toUpperCase()}`);
@@ -221,10 +304,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Copy link button
       const copyBtn = document.createElement('button');
-      copyBtn.className = 'btn btn-sm btn-icon';
+      copyBtn.className = 'btn-sm';
       copyBtn.dataset.action = 'copy';
       copyBtn.dataset.url = url;
-      copyBtn.textContent = '\u2398'; // ⎘
+      copyBtn.textContent = '\u2398';
       copyBtn.setAttribute('aria-label', 'Copy subtitle URL');
       copyBtn.tabIndex = 0;
       actionsDiv.appendChild(copyBtn);
@@ -232,9 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
       card.appendChild(actionsDiv);
       subtitleList.appendChild(card);
     });
-
-    // Update count badge
-    subtitleCount.textContent = `${subtitles.length} found`;
   }
 
   // ===========================================================================
@@ -281,14 +361,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ===========================================================================
-  // Actions
+  // Download
   // ===========================================================================
 
   /**
    * Download a single subtitle: fetch -> convert -> blob -> chrome.downloads
-   * @param {string} url     Subtitle URL to fetch
-   * @param {string} format  Target format: 'srt' | 'vtt' | 'txt'
-   * @param {number} index   Index into currentSubtitles
    */
   function handleDownload(url, format, index) {
     if (isDownloading) return;
@@ -299,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     isDownloading = true;
     refreshBtn.disabled = true;
-    bulkDownloadBtn.disabled = true;
+    if (bulkDownloadBtn) bulkDownloadBtn.disabled = true;
     statusText.textContent = 'Downloading...';
 
     const sub = currentSubtitles[index];
@@ -323,13 +400,11 @@ document.addEventListener('DOMContentLoaded', () => {
           { url: blobUrl, filename: filename },
           () => {
             URL.revokeObjectURL(blobUrl);
-
             if (chrome.runtime.lastError) {
               statusText.textContent = 'Failed';
             } else {
               statusText.textContent = 'Downloaded';
             }
-
             setTimeout(() => resetDownloadState(), 2000);
           }
         );
@@ -342,37 +417,53 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Bulk download all current subtitles sequentially.
-   * Sequential (not parallel) to avoid Chrome downloads API throttling.
+   * Bulk download all visible subtitles sequentially.
    */
   async function handleBulkDownload() {
-    if (isDownloading || currentSubtitles.length === 0) return;
+    if (isDownloading) return;
+
+    const toDownload = filteredSubtitles.filter(s => s.visible && s.selected);
+    if (toDownload.length === 0) return;
 
     isDownloading = true;
     refreshBtn.disabled = true;
-    bulkDownloadBtn.disabled = true;
+    if (bulkDownloadBtn) bulkDownloadBtn.disabled = true;
 
-    const targetFormat = bulkFormat.value;
+    const targetFormat = bulkFormat ? bulkFormat.value : 'vtt';
     let success = 0;
     let failed = 0;
-    const total = currentSubtitles.length;
+    const total = toDownload.length;
 
-    statusText.textContent = `Downloading ${total} subtitles...`;
+    // Show progress panel
+    if (downloadProgress) downloadProgress.hidden = false;
+    if (progressContainer) {
+      while (progressContainer.firstChild) progressContainer.removeChild(progressContainer.firstChild);
+      const progressBar = document.createElement('div');
+      progressBar.className = 'terminal-progress-bar';
+      const fill = document.createElement('div');
+      fill.className = 'terminal-progress-bar-fill';
+      fill.id = 'progress-fill';
+      fill.style.width = '0%';
+      progressBar.appendChild(fill);
+      progressContainer.appendChild(progressBar);
+    }
+
+    statusText.textContent = `Downloading ${total}...`;
 
     for (let i = 0; i < total; i++) {
-      const sub = currentSubtitles[i];
+      const sub = toDownload[i];
       const url = sub.url;
       const language = sub.language || 'Unknown';
 
       if (!url) {
         failed++;
-        statusText.textContent = `Downloading... ${success + failed}/${total}`;
+        updateProgressBar(i + 1, total);
+        statusText.textContent = `Progress: ${success + failed}/${total}`;
         continue;
       }
 
       try {
         const rawContent = await fetchSubtitleContent(url);
-
         let converted;
         try {
           const converter = new SubtitleConverter();
@@ -404,11 +495,23 @@ document.addEventListener('DOMContentLoaded', () => {
         failed++;
       }
 
-      statusText.textContent = `Downloading... ${success + failed}/${total}`;
+      updateProgressBar(i + 1, total);
+      statusText.textContent = `Progress: ${success + failed}/${total}`;
     }
 
-    statusText.textContent = `Downloaded ${success}/${total}`;
+    statusText.textContent = `Done: ${success}/${total}`;
+    if (downloadProgress) {
+      setTimeout(() => { downloadProgress.hidden = true; }, 3000);
+    }
     setTimeout(() => resetDownloadState(), 2000);
+  }
+
+  function updateProgressBar(current, total) {
+    const fill = document.getElementById('progress-fill');
+    if (fill) {
+      const pct = Math.round((current / total) * 100);
+      fill.style.width = pct + '%';
+    }
   }
 
   /**
@@ -426,7 +529,6 @@ document.addEventListener('DOMContentLoaded', () => {
       await navigator.clipboard.writeText(url);
       statusText.textContent = 'Copied!';
     } catch (_clipErr) {
-      // Fallback: execCommand for older contexts
       try {
         const textarea = document.createElement('textarea');
         textarea.value = url;
@@ -445,19 +547,56 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => maybeResetStatus(), 1500);
   }
 
+  /**
+   * Copy all visible subtitle URLs.
+   */
+  function handleCopyAll() {
+    const urls = filteredSubtitles
+      .filter(s => s.visible)
+      .map(s => s.url)
+      .filter(Boolean);
+
+    if (urls.length === 0) {
+      statusText.textContent = 'No URLs';
+      setTimeout(() => maybeResetStatus(), 1500);
+      return;
+    }
+
+    const text = urls.join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      statusText.textContent = `Copied ${urls.length} URLs`;
+      setTimeout(() => maybeResetStatus(), 1500);
+    }).catch(() => {
+      statusText.textContent = 'Copy failed';
+      setTimeout(() => maybeResetStatus(), 1500);
+    });
+  }
+
+  /**
+   * Toggle select all / deselect all for visible subtitles.
+   */
+  function toggleSelectAll() {
+    allSelected = !allSelected;
+    filteredSubtitles.forEach(s => {
+      if (s.visible) s.selected = allSelected;
+    });
+    if (selectAllBtn) {
+      selectAllBtn.textContent = allSelected ? '\u2611 Select All' : '\u2610 Deselect All';
+    }
+    updateStats();
+  }
+
   // ===========================================================================
   // Helpers
   // ===========================================================================
 
-  /** Reset download state and re-enable controls. */
   function resetDownloadState() {
     isDownloading = false;
     refreshBtn.disabled = false;
-    bulkDownloadBtn.disabled = false;
+    if (bulkDownloadBtn) bulkDownloadBtn.disabled = false;
     maybeResetStatus();
   }
 
-  /** Reset status text to 'Ready' if not in an active operation. */
   function maybeResetStatus() {
     if (!isDownloading) {
       statusText.textContent = 'Ready';
@@ -465,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Full refresh: re-query content + background, re-render.
+   * Full refresh: re-query, re-filter, re-render.
    */
   async function refreshSubtitles() {
     showState('loading');
@@ -475,7 +614,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const subtitles = await querySubtitles();
 
       if (subtitles.length > 0) {
-        renderCards(subtitles);
+        currentSubtitles = subtitles.map(s => ({ ...s, selected: true }));
+        allSelected = true;
+        if (selectAllBtn) selectAllBtn.textContent = '\u2611 Select All';
+        applyFilters();
         showState('content');
         statusText.textContent = 'Ready';
       } else {
@@ -489,10 +631,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ===========================================================================
-  // Event Listeners (delegation pattern — no per-button listeners)
+  // Event Listeners (Delegation Only)
   // ===========================================================================
 
-  // --- Subtitle card action buttons via delegation ---
+  // --- Subtitle card action buttons ---
   subtitleList.addEventListener('click', (e) => {
     const actionBtn = e.target.closest('[data-action]');
     if (!actionBtn) return;
@@ -534,19 +676,81 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- Refresh button ---
+  // --- Refresh ---
   refreshBtn.addEventListener('click', () => {
     if (!isDownloading) {
       refreshSubtitles();
     }
   });
 
-  // --- Bulk download button ---
-  bulkDownloadBtn.addEventListener('click', () => {
-    handleBulkDownload();
+  // --- Bulk download selected ---
+  if (bulkDownloadBtn) {
+    bulkDownloadBtn.addEventListener('click', () => {
+      handleBulkDownload();
+    });
+  }
+
+  // --- Copy links (selected) ---
+  if (copyLinksBtn) {
+    copyLinksBtn.addEventListener('click', () => {
+      const urls = filteredSubtitles
+        .filter(s => s.visible && s.selected)
+        .map(s => s.url)
+        .filter(Boolean);
+
+      if (urls.length === 0) {
+        statusText.textContent = 'Nothing selected';
+        setTimeout(() => maybeResetStatus(), 1500);
+        return;
+      }
+
+      navigator.clipboard.writeText(urls.join('\n')).then(() => {
+        statusText.textContent = `Copied ${urls.length} URLs`;
+        setTimeout(() => maybeResetStatus(), 1500);
+      });
+    });
+  }
+
+  // --- Copy all links ---
+  if (copyAllBtn) {
+    copyAllBtn.addEventListener('click', handleCopyAll);
+  }
+
+  // --- Select All / Deselect All ---
+  if (selectAllBtn) {
+    selectAllBtn.addEventListener('click', toggleSelectAll);
+  }
+
+  // --- Settings ---
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      if (chrome.runtime.openOptionsPage) {
+        chrome.runtime.openOptionsPage();
+      }
+    });
+  }
+
+  // --- Clear Cache ---
+  if (clearCacheBtn) {
+    clearCacheBtn.addEventListener('click', () => {
+      chrome.storage.local.clear(() => {
+        statusText.textContent = 'Cache cleared';
+        setTimeout(() => maybeResetStatus(), 2000);
+      });
+    });
+  }
+
+  // --- Filter checkboxes ---
+  const allFilterCheckboxes = document.querySelectorAll('.terminal-checkbox');
+  allFilterCheckboxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (currentSubtitles.length > 0) {
+        applyFilters();
+      }
+    });
   });
 
-  // --- Scan Page button (inside #view-empty) ---
+  // --- Scan button (inside empty state) ---
   viewEmpty.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
@@ -555,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- Retry button (inside #view-error) ---
+  // --- Retry button (inside error state) ---
   viewError.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
