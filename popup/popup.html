@@ -56,12 +56,12 @@
     <div id="view-empty" class="terminal-body hidden">
       <div class="terminal-panel">
         <div class="panel-header">Status</div>
-        <div class="panel-body" style="text-align:center;padding:24px 16px;">
-          <div style="font-size:2em;margin-bottom:8px;opacity:0.5;">~</div>
-          <div style="color:var(--text);opacity:0.7;font-size:var(--text-sm);margin-bottom:12px;">
+        <div class="panel-body empty-state">
+          <div style="font-size:2em;opacity:0.5;">~</div>
+          <div style="color:var(--text);font-size:var(--text-sm);opacity:0.7;">
             No subtitles detected
           </div>
-          <div style="font-size:var(--text-xs);color:var(--text);opacity:0.5;margin-bottom:16px;line-height:1.6;">
+          <div class="hint-text">
             Navigate to a video with subtitles<br>
             then scan the page.
           </div>
@@ -78,12 +78,12 @@
     <div id="view-error" class="terminal-body hidden">
       <div class="terminal-panel">
         <div class="panel-header" style="color:var(--danger);">Error</div>
-        <div class="panel-body" style="text-align:center;padding:24px 16px;">
-          <div style="font-size:2em;margin-bottom:8px;color:var(--danger);opacity:0.7;">!</div>
-          <div style="color:var(--danger);font-size:var(--text-sm);margin-bottom:8px;">
+        <div class="panel-body error-state">
+          <div style="font-size:2em;color:var(--danger);opacity:0.7;">!</div>
+          <div style="color:var(--danger);font-size:var(--text-sm);">
             Scan failed
           </div>
-          <div id="error-message" style="font-size:var(--text-xs);color:var(--text);opacity:0.5;margin-bottom:16px;">
+          <div id="error-message" class="hint-text">
             An unexpected error occurred.
           </div>
           <button id="retry-btn" class="terminal-btn terminal-btn-danger terminal-btn-sm" type="button" data-action="retry">

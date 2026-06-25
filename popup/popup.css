@@ -12,7 +12,7 @@
   --bg: #141D2B;           /* Mirage Blue — primary page background */
   --panel: #1A2332;        /* Deep Navy — container panel background */
   --accent: #9FEF00;       /* Lime Green — primary accent, text, borders, glow */
-  --muted: #444444;        /* Neutral Gray — muted borders */
+  --muted: #5A5A7A;        /* Muted Purple — muted borders */
   --textarea-bg: #232B3B;  /* Slate — textarea/input background */
   --text: #F8F8F2;         /* Light Ivory — body text */
 
@@ -175,8 +175,32 @@ body {
   min-height: 0;
 }
 
+/* State views */
+.empty-state,
+.error-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0.7;
+  gap: 12px;
+  text-align: center;
+}
+
+.hint-text {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.error-state #error-message {
+  color: var(--danger);
+}
+
 /* --------------------------------------------------------------------------
-   6. Panel System
+    6. Panel System
    -------------------------------------------------------------------------- */
 
 .terminal-panel {
@@ -671,6 +695,7 @@ body {
 .terminal-btn:disabled {
   opacity: 0.4;
   pointer-events: none;
+  cursor: not-allowed;
 }
 
 /* Primary variant — inverted by default */
@@ -873,12 +898,17 @@ body {
   .terminal-btn:active {
     transform: none;
   }
+
+  .skeleton-card,
+  .skeleton-line {
+    animation: none !important;
+  }
 }
 
 /* High contrast */
 @media (prefers-contrast: high) {
   :root {
-    --muted: #666666;
+    --muted: #7A7A9A;
   }
 
   .terminal-panel {
@@ -903,49 +933,8 @@ body {
   }
 }
 
-@media (max-width: 420px) {
-  :root {
-    --popup-width: 420px;
-  }
-
-  .terminal-panels-row {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 360px) {
-  :root {
-    --popup-width: 360px;
-  }
-
-  .terminal-title {
-    font-size: 1.2em;
-  }
-
-  .terminal-btn {
-    width: 100%;
-  }
-
-  .bulk-actions-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .bulk-action-controls {
-    flex-direction: column;
-  }
-
-  .commands-row {
-    flex-direction: column;
-  }
-
-  .checkbox-group {
-    gap: 3px;
-  }
-}
-
 /* --------------------------------------------------------------------------
-   22. Count Badge (Header)
+    22. Count Badge (Header)
    -------------------------------------------------------------------------- */
 
 .count-badge {
