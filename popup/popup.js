@@ -24,8 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const viewEmpty = document.getElementById('view-empty');
   const viewError = document.getElementById('view-error');
   const viewContent = document.getElementById('view-content');
-  const controls = document.getElementById('controls');
-
   // Stats panel
   const statRequests = document.getElementById('stat-requests');
   const statSubtitles = document.getElementById('stat-subtitles');
@@ -85,8 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
     viewEmpty.classList.add('hidden');
     viewError.classList.add('hidden');
     viewContent.classList.add('hidden');
-    controls.classList.add('hidden');
-
     switch (state) {
       case 'loading':
         viewLoading.classList.remove('hidden');
