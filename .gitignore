@@ -4,6 +4,27 @@ test-results/
 tests/
 *.log
 .DS_Store
+Thumbs.db
 *.tmp
 .vscode/settings.json
 *.code-workspace
+
+# Agent framework directories
+.bmad*/
+_bmad/
+.omo/
+.opencode/
+
+# Agent index & cache directories
+.codegraph
+.knowgrapher/
+.sentrux/
+
+# AI debug logs
+.ai/
+
+# Notes
+.notes/
+
+# Package lockfiles (developers install their own)
+package-lock.json
