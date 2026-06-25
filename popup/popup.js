@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
       copyBtn.className = 'btn-sm';
       copyBtn.dataset.action = 'copy';
       copyBtn.dataset.url = url;
-      copyBtn.textContent = '\u2398';
+      copyBtn.innerHTML = ICONS.copy + ' ';
       copyBtn.setAttribute('aria-label', 'Copy subtitle URL');
       copyBtn.tabIndex = 0;
       actionsDiv.appendChild(copyBtn);
@@ -580,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (s.visible) s.selected = allSelected;
     });
     if (selectAllBtn) {
-      selectAllBtn.textContent = allSelected ? '\u2611 Select All' : '\u2610 Deselect All';
+      selectAllBtn.innerHTML = allSelected ? (ICONS.selectAll + ' Select All') : (ICONS.deselectAll + ' Deselect All');
     }
     updateStats();
   }
@@ -615,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (subtitles.length > 0) {
         currentSubtitles = subtitles.map(s => ({ ...s, selected: true }));
         allSelected = true;
-        if (selectAllBtn) selectAllBtn.textContent = '\u2611 Select All';
+        if (selectAllBtn) selectAllBtn.innerHTML = ICONS.selectAll + ' Select All';
         applyFilters();
         showState('content');
         statusText.textContent = 'Ready';
