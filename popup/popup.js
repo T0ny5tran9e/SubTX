@@ -346,50 +346,48 @@ document.addEventListener('DOMContentLoaded', () => {
       card.dataset.index = String(realIndex);
       card.dataset.url = url;
 
-      // Selection checkbox
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.className = 'sub-checkbox';
       checkbox.checked = sub.selected !== false;
       card.appendChild(checkbox);
 
-      // Language heading
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'subtitle-info';
+
       const langDiv = document.createElement('div');
       langDiv.className = 'subtitle-lang';
       langDiv.textContent = language;
-      card.appendChild(langDiv);
+      infoDiv.appendChild(langDiv);
 
-      // Metadata row
       const metaDiv = document.createElement('div');
       metaDiv.className = 'subtitle-meta';
       metaDiv.textContent = `${safeLang}.${subtitleFormat} \u00B7 ${(confidence * 100).toFixed(0)}% \u00B7 ${source}`;
-      card.appendChild(metaDiv);
+      infoDiv.appendChild(metaDiv);
 
-      // Actions row
+      card.appendChild(infoDiv);
+
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'subtitle-actions';
 
-      const formats = ['srt', 'vtt', 'txt'];
-      formats.forEach((fmt) => {
-        const btn = document.createElement('button');
-        btn.className = 'btn-sm';
-        btn.dataset.action = 'download';
-        btn.dataset.format = fmt;
-        btn.dataset.index = String(realIndex);
-        btn.textContent = fmt.toUpperCase();
-        btn.setAttribute('aria-label', `Download as ${fmt.toUpperCase()}`);
-        btn.tabIndex = 0;
-        actionsDiv.appendChild(btn);
+      const formatSelect = document.createElement('select');
+      formatSelect.className = 'card-format-select';
+      ['vtt', 'srt', 'txt', 'ass', 'sbv', 'ssa', 'ttml'].forEach((fmt) => {
+        const opt = document.createElement('option');
+        opt.value = fmt;
+        opt.textContent = fmt.toUpperCase();
+        formatSelect.appendChild(opt);
       });
+      actionsDiv.appendChild(formatSelect);
 
-      // Copy link button
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'btn-sm';
-      copyBtn.dataset.action = 'copy';
-      copyBtn.innerHTML = ICONS.copy + ' ';
-      copyBtn.setAttribute('aria-label', 'Copy subtitle URL');
-      copyBtn.tabIndex = 0;
-      actionsDiv.appendChild(copyBtn);
+      const downloadBtn = document.createElement('button');
+      downloadBtn.className = 'btn-sm card-download-btn';
+      downloadBtn.dataset.action = 'download';
+      downloadBtn.dataset.index = String(realIndex);
+      downloadBtn.textContent = 'Download';
+      downloadBtn.setAttribute('aria-label', 'Download subtitle');
+      downloadBtn.tabIndex = 0;
+      actionsDiv.appendChild(downloadBtn);
 
       card.appendChild(actionsDiv);
       subtitleList.appendChild(card);
@@ -755,7 +753,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const url = card ? card.dataset.url : '';
 
     if (action === 'download') {
-      const format = actionBtn.dataset.format;
+      const select = card ? card.querySelector('.card-format-select') : null;
+      const format = select ? select.value : 'vtt';
       const index = parseInt(actionBtn.dataset.index, 10);
       if (!isNaN(index)) {
         handleDownload(url, format, index);
@@ -779,7 +778,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const url = card ? card.dataset.url : '';
 
     if (action === 'download') {
-      const format = actionBtn.dataset.format;
+      const select = card ? card.querySelector('.card-format-select') : null;
+      const format = select ? select.value : 'vtt';
       const index = parseInt(actionBtn.dataset.index, 10);
       if (!isNaN(index)) {
         handleDownload(url, format, index);
