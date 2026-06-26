@@ -10,7 +10,7 @@
  * - Comprehensive error handling and validation
  * - Memory-efficient stream processing
  *
- * Supported formats: VTT, SRT, TXT, ASS
+ * Supported formats: VTT, SRT, TXT, ASS, SBV, SSA, TTML
  *
  * @author Enhanced SubTX System
  * @version 2.0.0
@@ -22,7 +22,7 @@ const SUBTITLE_CONSTANTS = {
   MAX_FILE_SIZE: 1024 * 1024, // 1MB limit
   DEFAULT_DURATION_MS: 60000, // 1 minute default
   TIME_PRECISION_MS: 1, // Millisecond precision
-  SUPPORTED_FORMATS: ['vtt', 'srt', 'txt', 'ass'],
+  SUPPORTED_FORMATS: ['vtt', 'srt', 'txt', 'ass', 'sbv', 'ssa', 'ttml'],
   ENCODING_BOM: '\uFEFF' // UTF-8 BOM
 };
 
@@ -60,6 +60,21 @@ const SubtitleValidator = {
       case 'ass':
         this._validateAssStructure(lines, errors, warnings);
         break;
+      case 'sbv':
+        this._validateSbvStructure(lines, errors, warnings);
+        break;
+      case 'ssa':
+        this._validateAssStructure(lines, errors, warnings);
+        break;
+      case 'ttml':
+        this._validateTtmlStructure(lines, errors, warnings);
+        break;
+      case 'txt':
+        // No validation needed for plain text
+        break;
+      default:
+        errors.push(`Unknown format: ${format}`);
+        break;
     }
 
     return {
@@ -93,6 +108,20 @@ const SubtitleValidator = {
     if (!hasScriptInfo) {
       errors.push('ASS file must contain [Script Info] section');
     }
+  },
+
+  _validateSbvStructure(lines, errors, warnings) {
+    const hasTiming = lines.some(line => /^\d+:\d{2}:\d{2}\.\d{3},\d+:\d{2}:\d{2}\.\d{3}$/.test(line.trim()));
+    if (!hasTiming) {
+      errors.push('SBV file must contain timing information');
+    }
+  },
+
+  _validateTtmlStructure(lines, errors, warnings) {
+    const hasTtRoot = lines.some(line => line.includes('<tt'));
+    if (!hasTtRoot) {
+      errors.push('TTML file must contain <tt> root element');
+    }
   }
 };
 
@@ -120,8 +149,14 @@ const SubtitleParsers = {
         return this._parseSrtToCues(content);
       case 'ass':
         return this._parseAssToCues(content);
+      case 'ssa':
+        return this._parseAssToCues(content);
       case 'txt':
         return this._parseTxtToCues(content);
+      case 'sbv':
+        return this._parseSbvToCues(content);
+      case 'ttml':
+        return this._parseTtmlToCues(content);
       default:
         throw new Error(`Unsupported format: ${format}`);
     }
@@ -258,6 +293,159 @@ const SubtitleParsers = {
     }];
   },
 
+  _parseSbvToCues(content) {
+    const cues = [];
+    const lines = content.split('\n');
+    let i = 0;
+
+    while (i < lines.length) {
+      const trimmedLine = lines[i].trim();
+
+      // Look for SBV timing line: H:MM:SS.mmm,H:MM:SS.mmm
+      const timingMatch = trimmedLine.match(/^(\d+:\d{2}:\d{2}\.\d{3}),(\d+:\d{2}:\d{2}\.\d{3})$/);
+      if (!timingMatch) {
+        i++;
+        continue;
+      }
+
+      const cue = this._parseSbvTime(trimmedLine);
+      if (!cue) {
+        i++;
+        continue;
+      }
+
+      const textLines = [];
+      i++;
+      while (i < lines.length) {
+        const textLine = lines[i].trim();
+        if (!textLine || /^\d+:\d{2}:\d{2}\.\d{3},\d+:\d{2}:\d{2}\.\d{3}$/.test(textLine)) {
+          break;
+        }
+        if (textLine) {
+          textLines.push(textLine);
+        }
+        i++;
+      }
+
+      cue.text = textLines.join('\n');
+      if (cue.text) {
+        cues.push(cue);
+      }
+    }
+
+    return cues;
+  },
+
+  _parseSbvTime(timeStr) {
+    // Parse SBV time format "H:MM:SS.mmm,H:MM:SS.mmm"
+    const match = timeStr.match(/^(\d+:\d{2}:\d{2}\.\d{3}),(\d+:\d{2}:\d{2}\.\d{3})$/);
+    if (!match) return null;
+
+    return {
+      start: this._parseTimeToMs(match[1]),
+      end: this._parseTimeToMs(match[2])
+    };
+  },
+
+  _parseTtmlToCues(content) {
+    const cues = [];
+    let parser, xmlDoc;
+    try {
+      parser = new DOMParser();
+      xmlDoc = parser.parseFromString(content, 'text/xml');
+    } catch (e) {
+      console.warn('TTML parse error (DOMParser unavailable):', e.message);
+      return cues;
+    }
+
+    // Check for parse errors
+    const parseError = xmlDoc.querySelector('parsererror');
+    if (parseError) {
+      console.warn('TTML XML parse error:', parseError.textContent);
+      return cues;
+    }
+
+    // Get all <p> elements
+    const pElements = xmlDoc.getElementsByTagName('p');
+
+    for (let i = 0; i < pElements.length; i++) {
+      const p = pElements[i];
+      const begin = p.getAttribute('begin');
+      const end = p.getAttribute('end');
+
+      if (!begin || !end) continue;
+
+      const startMs = this._parseTtmlTime(begin);
+      const endMs = this._parseTtmlTime(end);
+
+      if (startMs === null || endMs === null) continue;
+
+      // Extract text content, converting <br/> to newlines
+      let text = '';
+      for (let j = 0; j < p.childNodes.length; j++) {
+        const node = p.childNodes[j];
+        if (node.nodeType === 3) { // Text node
+          text += node.textContent;
+        } else if (node.nodeType === 1 && node.tagName.toLowerCase() === 'br') {
+          text += '\n';
+        }
+      }
+
+      text = text.trim();
+      // Also handle \N line breaks
+      text = text.replace(/\\N/g, '\n');
+
+      if (text) {
+        cues.push({
+          start: startMs,
+          end: endMs,
+          text: text
+        });
+      }
+    }
+
+    return cues;
+  },
+
+  _parseTtmlTime(timeStr) {
+    if (!timeStr) return null;
+
+    // Try frame-based format HH:MM:SS:FF first
+    if (/^\d{2}:\d{2}:\d{2}:\d{2}$/.test(timeStr)) {
+      return this._parseFrameTime(timeStr);
+    }
+
+    // Try standard HH:MM:SS.mmm or HH:MM:SS.m
+    const match = timeStr.match(/^(\d{2}):(\d{2}):(\d{2})\.(\d+)$/);
+    if (match) {
+      const hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const seconds = parseInt(match[3], 10);
+      const ms = parseInt(match[4].padEnd(3, '0').substring(0, 3), 10);
+
+      return ((hours * 3600) + (minutes * 60) + seconds) * 1000 + ms;
+    }
+
+    return null;
+  },
+
+  _parseFrameTime(timeStr) {
+    // Parse HH:MM:SS:FF (frames-based time)
+    const match = timeStr.match(/^(\d{2}):(\d{2}):(\d{2}):(\d{2})$/);
+    if (!match) return null;
+
+    const hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const seconds = parseInt(match[3], 10);
+    const frames = parseInt(match[4], 10);
+    const frameRate = 30; // Default frame rate
+
+    const baseMs = ((hours * 3600) + (minutes * 60) + seconds) * 1000;
+    const frameMs = (frames / frameRate) * 1000;
+
+    return baseMs + Math.round(frameMs);
+  },
+
   _parseTimingLine(timingLine) {
     // Parse timing line like "00:00:01.500 --> 00:00:04.000"
     const timingMatch = timingLine.match(/(\d{2}:\d{2}:\d{2}[.,]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[.,]\d{3})/);
@@ -270,9 +458,9 @@ const SubtitleParsers = {
   },
 
   _parseTimeToMs(timeStr) {
-    // Parse "HH:MM:SS.mmm" or "HH:MM:SS,mmm" to milliseconds
+    // Parse "H:MM:SS.mmm" or "HH:MM:SS,mmm" to milliseconds
     const cleanTime = timeStr.replace(',', '.');
-    const match = cleanTime.match(/(\d{2}):(\d{2}):(\d{2})\.(\d{3})/);
+    const match = cleanTime.match(/(\d{1,2}):(\d{2}):(\d{2})\.(\d{3})/);
     if (!match) return 0;
 
     const hours = parseInt(match[1], 10);
@@ -316,6 +504,12 @@ const SubtitleConverters = {
         return this._cuesToTxt(cues, options);
       case 'ass':
         return this._cuesToAss(cues, options);
+      case 'sbv':
+        return this._cuesToSbv(cues, options);
+      case 'ssa':
+        return this._cuesToAss(cues, options);
+      case 'ttml':
+        return this._cuesToTtml(cues, options);
       default:
         throw new Error(`Unsupported target format: ${targetFormat}`);
     }
@@ -380,6 +574,57 @@ const SubtitleConverters = {
     }
 
     return lines.join('\n');
+  },
+
+  _cuesToSbv(cues, options) {
+    const lines = [];
+
+    for (const cue of cues) {
+      const startTime = this._formatTimeSbv(cue.start);
+      const endTime = this._formatTimeSbv(cue.end);
+      lines.push(`${startTime},${endTime}`);
+      lines.push(cue.text);
+      lines.push('');
+    }
+
+    return lines.join('\n').trim();
+  },
+
+  _formatTimeSbv(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const milliseconds = ms % 1000;
+
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+  },
+
+  _cuesToTtml(cues, options) {
+    const lines = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<tt xmlns="http://www.w3.org/ns/ttml">',
+      '  <head/>',
+      '  <body>',
+      '    <div>'
+    ];
+
+    for (const cue of cues) {
+      const startTime = this._formatTimeTtml(cue.start);
+      const endTime = this._formatTimeTtml(cue.end);
+      const text = cue.text.replace(/\n/g, '<br/>');
+      lines.push(`      <p begin="${startTime}" end="${endTime}">${text}</p>`);
+    }
+
+    lines.push('    </div>');
+    lines.push('  </body>');
+    lines.push('</tt>');
+
+    return lines.join('\n');
+  },
+
+  _formatTimeTtml(ms) {
+    return this._formatTimeVtt(ms);
   },
 
   _formatTimeVtt(ms) {
@@ -488,10 +733,13 @@ const SubtitleFormatDetector = {
 
     const lines = content.split('\n').map(line => line.trim()).filter(line => line);
 
-    // Priority-based detection
+    // Priority-based detection: VTT → SRT → ASS → SSA → SBV → TTML → TXT
     if (this._isVttFormat(lines)) return 'vtt';
     if (this._isSrtFormat(lines)) return 'srt';
     if (this._isAssFormat(lines)) return 'ass';
+    if (this._isSsaFormat(lines)) return 'ssa';
+    if (this._isSbvFormat(lines)) return 'sbv';
+    if (this._isTtmlFormat(lines)) return 'ttml';
     if (this._isTxtFormat(content)) return 'txt';
 
     return 'unknown';
@@ -512,7 +760,33 @@ const SubtitleFormatDetector = {
   },
 
   _isAssFormat(lines) {
-    return lines.some(line => line === '[Script Info]');
+    return lines.some(line => /^\[V4\+\s*Styles\]$/.test(line)) ||
+           lines.some(line => /^ScriptType:\s*v4\.00\+/.test(line));
+  },
+
+  _isSsaFormat(lines) {
+    // SSA has [Script Info] + ScriptType: v4.00 (without +) AND [V4 Styles] (without +)
+    const hasScriptInfo = lines.some(line => /^\[Script Info\]$/.test(line));
+    const isV400 = lines.some(line => /^ScriptType:\s*v4\.00$/.test(line));
+    const hasV4Styles = lines.some(line => /^\[V4 Styles\]$/.test(line));
+    return hasScriptInfo && isV400 && hasV4Styles;
+  },
+
+  _isSbvFormat(lines) {
+    // Check for comma-separated time format H:MM:SS.mmm,H:MM:SS.mmm
+    // Must NOT have '-->' (which is VTT/SRT/ASS/SSA) — but those are checked first
+    for (const line of lines) {
+      if (/^\d+:\d{2}:\d{2}\.\d{3},\d+:\d{2}:\d{2}\.\d{3}$/.test(line)) {
+        // Safety exclusion: ensure it doesn't contain '-->'
+        if (!line.includes('-->')) return true;
+      }
+    }
+    return false;
+  },
+
+  _isTtmlFormat(lines) {
+    // TTML XML has <tt as a root element
+    return lines.some(line => /^<tt[\s>]/.test(line));
   },
 
   _isTxtFormat(content) {
