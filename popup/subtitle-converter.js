@@ -70,7 +70,7 @@ const SubtitleValidator = {
   },
 
   _validateVttStructure(lines, errors, warnings) {
-    if (!lines[0] || lines[0].trim().toUpperCase() !== 'WEBVTT') {
+    if (!lines[0] || !/^WEBVTT(\s|$)/i.test(lines[0].trim())) {
       errors.push('VTT file must start with WEBVTT header');
     }
   },
@@ -498,7 +498,7 @@ const SubtitleFormatDetector = {
   },
 
   _isVttFormat(lines) {
-    return lines.length > 0 && lines[0].toUpperCase() === 'WEBVTT';
+    return lines.length > 0 && /^WEBVTT(\s|$)/i.test(lines[0].trim());
   },
 
   _isSrtFormat(lines) {
